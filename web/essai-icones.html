@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Icônes — quatre directions</title>
+<link rel="stylesheet" href="/css/app.css">
+<style>
+	:root { font-size: 14px; }
+	html, body { overflow: auto; height: auto; }
+	body { padding: 1.8rem; }
+
+	h1 { margin: 0 0 0.3rem; font-size: 1.5rem; font-weight: 650; letter-spacing: -0.02em; }
+	.chapeau { margin: 0 0 1.8rem; font-size: 1rem; color: var(--ink-2); max-width: 44rem; line-height: 1.5; }
+
+	.bloc { margin-bottom: 2.2rem; }
+	.bloc h2 {
+		margin: 0 0 0.15rem;
+		font-size: 0.85rem; font-weight: 650;
+		letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3);
+	}
+	.bloc p { margin: 0 0 0.9rem; font-size: 0.95rem; color: var(--ink-2); max-width: 44rem; }
+
+	/* Les onglets passent à la ligne pour qu'on voie les six d'un coup. */
+	.rangee { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+</style>
+</head>
+<body>
+
+<h1>Icônes de catégories — quatre directions</h1>
+<p class="chapeau">
+	Onglets à leur taille réelle sur une dalle 1366×768. Le premier onglet est
+	l'onglet actif : c'est là que se joue la moitié du problème, puisque son fond
+	est sombre.
+</p>
+
+<div id="essais"></div>
+
+<script>
+const CATS = [
+	['Pains', 'pain'],
+	['Viennoiseries', 'croissant'],
+	['Pâtisseries', 'patisserie'],
+	['Sandwichs', 'sandwich'],
+	['Boissons', 'boisson'],
+	['Divers', 'divers'],
+];
+
+const rangee = (contenu) =>
+	`<div class="rangee">${CATS.map(([nom, cle], i) =>
+		`<button class="cat" type="button" aria-selected="${i === 0}">${contenu(cle)}${nom}</button>`
+	).join('')}</div>`;
+
+const image = (dossier, blanchir) => (cle) =>
+	`<img class="cat-ico" src="/img/${dossier}/${cle}.webp" alt=""` +
+	(blanchir ? '' : ' style="filter:none"') + '>';
+
+const DIRECTIONS = [
+	['Actuelle — trait généré',
+	 'Contour fin, monochrome. Passe en blanc sur l’onglet actif.',
+	 rangee(image('icons', true))],
+
+	['Gouache — taillée dans les illustrations produits',
+	 'Ce sont les mêmes peintures que sur les tuiles : une seule langue visuelle pour tout l’écran. En couleur, donc pas de passage au blanc — reste à voir si ça tient sur le fond noir.',
+	 rangee(image('essais/icones-gouache', false))],
+
+	['Silhouette pleine',
+	 'Formes compactes sans trait fin. C’est ce qui se lit le mieux en petit, mais c’est aussi le plus impersonnel.',
+	 rangee(image('essais/icones-silhouette', true))],
+
+	['Aucune icône',
+	 'Ta remarque de départ : « on s’habitue mieux au texte qu’aux images ». Une barre d’onglets purement typographique est une réponse parfaitement défendable — et la plus sobre.',
+	 rangee(() => '')],
+];
+
+document.getElementById('essais').innerHTML = DIRECTIONS.map(([titre, note, html]) => `
+	<section class="bloc">
+		<h2>${titre}</h2>
+		<p>${note}</p>
+		${html}
+	</section>`).join('');
+</script>
+
+</body>
+</html>

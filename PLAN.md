@@ -198,8 +198,15 @@ après comparaison des trois styles dans la tuile réelle. À réappliquer telle
 quelle quand le vrai catalogue arrivera — `./scripts/generer-images.sh` sans
 argument.
 
-**Icônes dessinées au trait**, jamais générées, et réduites à deux formes
-maximum. Elles sont vues à un mètre, du coin de l'œil.
+**Icônes de catégories : des gouaches**, taillées dans les illustrations de
+produits et normalisées. Une seule langue visuelle pour tout l'écran. Les
+icônes de **paiement** restent dessinées à la main en SVG, parce qu'elles
+doivent virer au blanc sur un fond saturé.
+
+Quatre directions ont été comparées dans la barre d'onglets réelle
+(`/essai-icones.html`) : trait généré, gouache, silhouette pleine, aucune
+icône. Le trait généré a été écarté — chaque icône générée séparément a sa
+propre graisse, l'ensemble fait clipart.
 
 ## Journal
 

@@ -150,18 +150,27 @@ catalogue à 2,00 € n'ont aucune raison d'être le même article.
 
 ## Icônes
 
-Les icônes de catégories et de paiement sont **dessinées au trait**, en ligne
-dans la page. Le choix a été mesuré contre des icônes générées par IA : ces
-dernières perdent sur trois points, et pas sur le goût.
+Les icônes de **catégories** sont des gouaches, taillées dans les illustrations
+de produits : le pain gris pour « Pains », le croissant pour « Viennoiseries »,
+et ainsi de suite. Tout l'écran parle donc une seule langue visuelle.
 
-- Elles sont monochromes, donc incapables de porter la couleur de la catégorie.
-- Sur l'onglet actif, qui est sombre, une icône brune devient illisible ; un
-  tracé passe en blanc.
-- Générée séparément, chaque icône a sa propre graisse de trait : la barre
-  d'onglets perd son unité.
+Quatre directions ont été comparées dans la barre d'onglets réelle, visible sur
+`/essai-icones.html` : trait généré, gouache, silhouette pleine, aucune icône.
+Les icônes au trait ont été écartées — générée séparément, chacune a sa propre
+graisse, et l'ensemble fait clipart posé sur une interface soignée.
 
-Les illustrations de **produits**, elles, gagnent nettement à être générées :
-la comparaison est visible sur `/essai.html`.
+Les icônes de **paiement** restent dessinées à la main, en SVG dans la page :
+elles doivent virer au blanc franc sur un fond vert ou bleu saturé, ce qu'une
+image matricielle ne sait pas faire.
+
+Toute icône matricielle passe par `scripts/normaliser-icones.py`, qui recadre
+sur un seuil d'opacité et égalise l'aire du dessin. Sans lui, la marge
+transparente laissée par le modèle varie du simple au double et les icônes
+paraissent de tailles inégales alors que leurs boîtes sont identiques.
+
+```bash
+uv run --with pillow python scripts/normaliser-icones.py img/icons
+```
 
 ## Déployer sur la caisse
 

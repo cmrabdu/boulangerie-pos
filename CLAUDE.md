@@ -42,15 +42,21 @@ Aucun clavier ni souris : **tout doit être atteignable au doigt**.
   visibles, couleurs terreuses, esprit artisanal. C'est le style de toutes les
   illustrations de produits à venir, y compris quand le vrai catalogue
   arrivera : `./scripts/generer-images.sh` sans argument.
-- **Les icônes restent dessinées au trait, jamais générées.** Comparaison faite
-  le 29/07 : une icône matricielle est monochrome, donc muette sur la couleur de
-  catégorie, illisible sur l'onglet actif sombre, et d'une graisse de trait
-  différente de ses voisines.
-- **Une icône est vue à un mètre, du coin de l'œil.** Deux ou trois formes
-  maximum, trait épais, pas de détail décoratif. Si elle demande un instant de
-  lecture, elle est ratée. Toute icône générée passe par
-  `scripts/normaliser-icones.py` : sans lui, la marge transparente varie d'une
-  image à l'autre et les icônes paraissent de tailles inégales.
+- **Les icônes de catégories sont des gouaches, taillées dans les illustrations
+  de produits.** Quatre directions ont été comparées le 29/07 dans la barre
+  d'onglets réelle : trait généré, gouache, silhouette pleine, aucune icône.
+  Les icônes au trait, générées séparément, n'ont jamais la même graisse et
+  font clipart posé sur une interface soignée. La gouache est la seule qui
+  donne un écran d'un seul tenant, puisque c'est la peinture des tuiles.
+  Réserve levée par le test : les six tiennent sur l'onglet actif sombre.
+- **Les icônes de paiement, elles, restent dessinées à la main** en SVG dans
+  `web/index.html` : elles doivent virer au blanc franc sur un fond vert ou
+  bleu saturé, ce qu'une image matricielle ne sait pas faire.
+- **Une icône est vue à un mètre, du coin de l'œil.** Si elle demande un
+  instant de lecture, elle est ratée. Toute icône matricielle passe par
+  `scripts/normaliser-icones.py`, qui recadre sur un seuil d'opacité et égalise
+  l'**aire** du dessin : sans lui, la marge transparente varie d'une image à
+  l'autre et les icônes paraissent de tailles inégales à boîtes identiques.
 - **Rien de ce qui porte un état ne doit dépendre d'une animation.** Le total
   s'écrit avant que le défilement commence ; un panneau coupe ses événements
   dès la première image de sa fermeture. Une animation qui ne s'exécute pas

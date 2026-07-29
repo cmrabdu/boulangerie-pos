@@ -158,13 +158,11 @@ button {
 	object-fit: contain;
 }
 
-/* Sur l'onglet actif, le fond devient noir et une icône brun foncé y disparaît.
-   `brightness(0) invert(1)` repeint tout pixel opaque en blanc pur en
-   respectant la transparence — ce qu'une image matricielle monochrome ne sait
-   pas faire autrement. */
-.cat[aria-selected="true"] .cat-ico {
-	filter: brightness(0) invert(1);
-}
+/* Les icônes sont des gouaches, taillées dans les mêmes peintures que les
+   illustrations des tuiles : tout l'écran parle ainsi une seule langue. Elles
+   gardent leurs couleurs sur l'onglet actif — vérifié, les six tiennent sur le
+   fond sombre, y compris l'éclair au chocolat, dont le glaçage brillant et la
+   pâte dorée suffisent à le détacher. */
 
 .cat[aria-selected="true"] {
 	background: var(--ink);
