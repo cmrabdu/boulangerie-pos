@@ -203,6 +203,14 @@ maximum. Elles sont vues à un mètre, du coin de l'œil.
 
 ## Journal
 
+- **2026-07-29** — Icônes de catégories reprises : la taille CSS n'était que
+  la moitié du problème, le dessin n'occupait que 53 à 76 % de son image selon
+  l'icône. D'où `scripts/normaliser-icones.py`, qui recadre sur un seuil
+  d'opacité et égalise l'**aire** du dessin plutôt que son plus grand côté.
+  Catalogue de démonstration illustré à 57/57 en gouache, 1,7 Mo.
+- **2026-07-29** — Montant libre en place. Deux bugs corrigés, même cause : le
+  total affiché et la fermeture du pavé dépendaient d'une animation pour
+  aboutir. **Rien de ce qui porte un état ne doit dépendre d'une animation.**
 - **2026-07-29** — Gouache confirmée comme direction. Quatre icônes reprises sur
   retour du user : cash et Bancontact étaient trop petites et trop détaillées
   (portées à 2,4 rem, blanc franc, deux formes chacune) ; croissant et

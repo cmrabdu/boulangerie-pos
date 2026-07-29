@@ -46,8 +46,15 @@ Aucun clavier ni souris : **tout doit être atteignable au doigt**.
   le 29/07 : une icône matricielle est monochrome, donc muette sur la couleur de
   catégorie, illisible sur l'onglet actif sombre, et d'une graisse de trait
   différente de ses voisines.
-- **Une icône est vue à un mètre, du coin de l'œil.** Deux formes maximum, pas
-  de détail décoratif. Si elle demande un instant de lecture, elle est ratée.
+- **Une icône est vue à un mètre, du coin de l'œil.** Deux ou trois formes
+  maximum, trait épais, pas de détail décoratif. Si elle demande un instant de
+  lecture, elle est ratée. Toute icône générée passe par
+  `scripts/normaliser-icones.py` : sans lui, la marge transparente varie d'une
+  image à l'autre et les icônes paraissent de tailles inégales.
+- **Rien de ce qui porte un état ne doit dépendre d'une animation.** Le total
+  s'écrit avant que le défilement commence ; un panneau coupe ses événements
+  dès la première image de sa fermeture. Une animation qui ne s'exécute pas
+  laisserait sinon un total faux ou un panneau invisible bloquant l'écran.
 - **Jamais de clé d'API dans le dépôt ni dans le code.** Les scripts la lisent
   depuis l'environnement. Voir « Secrets » plus bas.
 
