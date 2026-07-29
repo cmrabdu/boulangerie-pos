@@ -451,17 +451,17 @@ button {
 	will-change: transform;
 }
 
-/* Icônes de paiement : tracé blanc sur fond saturé. Une image matricielle
-   monochrome ne pourrait pas s'éclaircir avec le bouton. */
+/* Icônes de paiement : blanc franc, sans voile d'opacité, et nettement plus
+   grandes que les icônes de catégories. Ce sont les deux boutons qu'on vise
+   sans regarder, à la fin de chaque vente. */
 .pay-ico {
-	width: 1.7rem;
-	height: 1.7rem;
+	width: 2.4rem;
+	height: 2.4rem;
 	fill: none;
 	stroke: currentColor;
-	stroke-width: 1.7;
+	stroke-width: 1.9;
 	stroke-linecap: round;
 	stroke-linejoin: round;
-	opacity: 0.85;
 }
 
 .pay-cash { background: var(--cash); }
@@ -473,7 +473,7 @@ button {
 	box-shadow: inset 0 0 0 1px var(--line-2);
 	cursor: default;
 }
-.pay-btn:disabled .pay-ico { opacity: 0.4; }
+.pay-btn:disabled .pay-ico { opacity: 0.45; }
 
 /* --------------------------------------------------------------------------
    Écran de paiement

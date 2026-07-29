@@ -38,6 +38,16 @@ Aucun clavier ni souris : **tout doit être atteignable au doigt**.
   rien à faire devant quelqu'un qui sert des clients.
 - **Une image manquante n'est jamais un trou.** Un produit sans illustration
   s'affiche exactement comme si la fonctionnalité n'existait pas.
+- **Direction visuelle arrêtée : la gouache peinte** — touches de pinceau
+  visibles, couleurs terreuses, esprit artisanal. C'est le style de toutes les
+  illustrations de produits à venir, y compris quand le vrai catalogue
+  arrivera : `./scripts/generer-images.sh` sans argument.
+- **Les icônes restent dessinées au trait, jamais générées.** Comparaison faite
+  le 29/07 : une icône matricielle est monochrome, donc muette sur la couleur de
+  catégorie, illisible sur l'onglet actif sombre, et d'une graisse de trait
+  différente de ses voisines.
+- **Une icône est vue à un mètre, du coin de l'œil.** Deux formes maximum, pas
+  de détail décoratif. Si elle demande un instant de lecture, elle est ratée.
 - **Jamais de clé d'API dans le dépôt ni dans le code.** Les scripts la lisent
   depuis l'environnement. Voir « Secrets » plus bas.
 

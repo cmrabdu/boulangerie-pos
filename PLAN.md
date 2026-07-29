@@ -49,7 +49,7 @@ Statuts : ⬜ à faire · 🟡 en cours · ✅ terminé et vérifié
 - [x] 3.6 Vérifié en 1366×768 : aucun débordement, tuiles 221×123 px,
       boutons de paiement 176×90 px, total en 50 px
 
-### Phase 4 — Tactile et animations 🟡
+### Phase 4 — Tactile et animations ✅
 
 - [x] 4.1 Enfoncement déclenché sur `pointerdown` (pas `click`)
 - [x] 4.2 Courbe `ease-out` iOS, durées 140–260 ms
@@ -57,8 +57,8 @@ Statuts : ⬜ à faire · 🟡 en cours · ✅ terminé et vérifié
 - [x] 4.4 `transform`/`opacity` uniquement
 - [x] 4.5 Anti-zoom, anti-sélection, anti-double-tap, `touch-action`
 - [x] 4.6 Total qui défile de l'ancienne à la nouvelle valeur
-- [ ] 4.7 **Validé sur un vrai écran tactile** — impossible depuis le Mac.
-      À faire avec `make lan` depuis un iPad ou un téléphone.
+- [x] 4.7 **Validé sur un vrai écran tactile** — essayé sur tablette par le
+      user le 29/07 : rendu et animations validés.
 
 ### Phase 5 — Encaissement ✅
 
@@ -169,8 +169,24 @@ Statuts : ⬜ à faire · 🟡 en cours · ✅ terminé et vérifié
 
 ---
 
+## Direction visuelle — arrêtée le 29/07
+
+**Gouache peinte** pour toutes les illustrations de produits : touches de
+pinceau visibles, couleurs terreuses, esprit artisanal. Validée par le user
+après comparaison des trois styles dans la tuile réelle. À réappliquer telle
+quelle quand le vrai catalogue arrivera — `./scripts/generer-images.sh` sans
+argument.
+
+**Icônes dessinées au trait**, jamais générées, et réduites à deux formes
+maximum. Elles sont vues à un mètre, du coin de l'œil.
+
 ## Journal
 
+- **2026-07-29** — Gouache confirmée comme direction. Quatre icônes reprises sur
+  retour du user : cash et Bancontact étaient trop petites et trop détaillées
+  (portées à 2,4 rem, blanc franc, deux formes chacune) ; croissant et
+  pâtisserie simplifiés, leur feuilletage et leur glaçage ne tenaient pas à
+  23 px. Tactile validé sur tablette.
 - **2026-07-29** — Illustrations générées (gpt-image-1.5, fond transparent) et
   comparées dans la tuile réelle. Gouache retenue. Icônes IA testées puis
   écartées au profit du tracé vectoriel, pour des raisons de fonction et non de

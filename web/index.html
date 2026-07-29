@@ -19,15 +19,16 @@
     <path d="M3.6 12.6c0-2.9 3.8-5.1 8.4-5.1s8.4 2.2 8.4 5.1c0 2.3-1.7 3.6-4 3.7-1.5.1-2.7.2-4.4.2s-2.9-.1-4.4-.2c-2.3-.1-4-1.4-4-3.7Z"/>
     <path d="M9.1 8.1 7.4 11m4.4-2.9L10.1 11m4.4-2.9L12.8 11"/>
   </symbol>
+  <!-- Croissant : un croissant a trop de détails pour 23 px. On garde la seule
+       chose qui le rend reconnaissable — le croissant de lune aux pointes
+       effilées — et on jette le feuilletage, qui ne fait que du bruit. -->
   <symbol id="i-croissant" viewBox="0 0 24 24">
-    <path d="M3.2 16.8c-.4-4.6 2.4-8.8 6.8-10.2 3.5-1.1 7.2-.2 9.6 2.2"/>
-    <path d="M3.2 16.8c2.2-1 3.7-1 5.4-.4 1.9.7 3.4 1.4 5.7 1 2.6-.4 4.5-2.3 5.3-4.9.4-1.3.4-2.6 0-3.7"/>
-    <path d="M8.6 16.4c.2-2.2 1.2-4 2.9-5.2m2.8 6.6c-.6-2.4-.2-4.6 1.2-6.4"/>
+    <path d="M4 17.6c-1.4-6.2 2.6-11.4 8.8-11.9 3.4-.3 6.2 1 8 3.1-2.7-1.2-5.4-1-7.6.5-3.2 2.2-4.4 5.7-3.2 9-2.4.5-4.4.2-6-.7Z"/>
   </symbol>
+  <!-- Pâtisserie : deux traits, une caissette et un dôme. -->
   <symbol id="i-patisserie" viewBox="0 0 24 24">
-    <path d="M6.2 12.4h11.6l-1 6.1a1.6 1.6 0 0 1-1.6 1.3H8.8a1.6 1.6 0 0 1-1.6-1.3Z"/>
-    <path d="M6.2 12.4c0-1.6 1.2-2.6 2.5-2.6.2-1.4 1.4-2.4 2.8-2.4 1 0 1.9.5 2.4 1.3.4-.2.8-.3 1.2-.3 1.5 0 2.7 1.1 2.7 2.6 0 .5-.1 1-.4 1.4"/>
-    <path d="M12 7.4V4.6"/>
+    <path d="M5.8 11.4h12.4l-1.5 7.7a1.7 1.7 0 0 1-1.7 1.4H9a1.7 1.7 0 0 1-1.7-1.4Z"/>
+    <path d="M5.8 11.4a6.2 6.2 0 0 1 12.4 0"/>
   </symbol>
   <symbol id="i-sandwich" viewBox="0 0 24 24">
     <path d="M4.4 8.6c0-1.5 3.4-2.7 7.6-2.7s7.6 1.2 7.6 2.7-3.4 2.2-7.6 2.2S4.4 10.1 4.4 8.6Z"/>
@@ -46,15 +47,18 @@
   <!-- Paiement. Dessinées plutôt que générées : elles doivent rester blanches
        et nettes sur un fond vert ou bleu saturé, ce qu'une image matricielle
        monochrome ne sait pas faire. -->
+  <!-- Paiement : deux formes, pas une de plus. Ces icônes sont vues à un mètre,
+       du coin de l'œil, pendant qu'on rend la monnaie — le détail y est un
+       handicap, pas une richesse. Un billet (rectangle + pièce au centre)
+       contre une carte (rectangle + bande sur toute la largeur) : les deux
+       silhouettes ne peuvent pas se confondre. -->
   <symbol id="i-cash" viewBox="0 0 24 24">
-    <rect x="2.4" y="5.6" width="15.4" height="9.4" rx="1.8"/>
-    <circle cx="10.1" cy="10.3" r="2.4"/>
-    <path d="M6.2 17.8h9.6a5.4 5.4 0 0 0 5.4-5.4V8.6"/>
+    <rect x="1.8" y="6" width="20.4" height="12" rx="2.4"/>
+    <circle cx="12" cy="12" r="3.1"/>
   </symbol>
   <symbol id="i-carte" viewBox="0 0 24 24">
-    <rect x="2.6" y="5.4" width="18.8" height="13.2" rx="2.4"/>
-    <path d="M2.6 9.9h18.8"/>
-    <path d="M6.4 14.6h4.2"/>
+    <rect x="1.8" y="4.8" width="20.4" height="14.4" rx="2.4"/>
+    <path d="M1.8 10.2h20.4"/>
   </symbol>
 </svg>
 
