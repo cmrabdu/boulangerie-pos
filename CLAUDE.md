@@ -42,13 +42,11 @@ Aucun clavier ni souris : **tout doit être atteignable au doigt**.
   visibles, couleurs terreuses, esprit artisanal. C'est le style de toutes les
   illustrations de produits à venir, y compris quand le vrai catalogue
   arrivera : `./scripts/generer-images.sh` sans argument.
-- **Les icônes de catégories sont des gouaches, taillées dans les illustrations
-  de produits.** Quatre directions ont été comparées le 29/07 dans la barre
-  d'onglets réelle : trait généré, gouache, silhouette pleine, aucune icône.
-  Les icônes au trait, générées séparément, n'ont jamais la même graisse et
-  font clipart posé sur une interface soignée. La gouache est la seule qui
-  donne un écran d'un seul tenant, puisque c'est la peinture des tuiles.
-  Réserve levée par le test : les six tiennent sur l'onglet actif sombre.
+- **Les icônes de catégories sont des silhouettes pleines monochromes.**
+  Voir la section détaillée en bas de ce fichier. Les jeux « au trait » générés
+  icône par icône ont été écartés : ils n'ont jamais la même graisse d'une
+  image à l'autre. La gouache a été essayée puis écartée aussi — elle est
+  superbe sur les tuiles, mais une icône doit pouvoir virer au blanc.
 - **Les icônes de paiement, elles, restent dessinées à la main** en SVG dans
   `web/index.html` : elles doivent virer au blanc franc sur un fond vert ou
   bleu saturé, ce qu'une image matricielle ne sait pas faire.
