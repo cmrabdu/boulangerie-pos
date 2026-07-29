@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Icônes — quatre directions</title>
+<title>Icônes — trois styles</title>
 <link rel="stylesheet" href="/css/app.css">
 <style>
 	:root { font-size: 14px; }
@@ -11,15 +11,15 @@
 	body { padding: 1.8rem; }
 
 	h1 { margin: 0 0 0.3rem; font-size: 1.5rem; font-weight: 650; letter-spacing: -0.02em; }
-	.chapeau { margin: 0 0 1.8rem; font-size: 1rem; color: var(--ink-2); max-width: 44rem; line-height: 1.5; }
+	.chapeau { margin: 0 0 1.8rem; font-size: 1rem; color: var(--ink-2); max-width: 46rem; line-height: 1.5; }
 
-	.bloc { margin-bottom: 2.2rem; }
+	.bloc { margin-bottom: 2.4rem; }
 	.bloc h2 {
 		margin: 0 0 0.15rem;
 		font-size: 0.85rem; font-weight: 650;
 		letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3);
 	}
-	.bloc p { margin: 0 0 0.9rem; font-size: 0.95rem; color: var(--ink-2); max-width: 44rem; }
+	.bloc p { margin: 0 0 0.9rem; font-size: 0.95rem; color: var(--ink-2); max-width: 46rem; }
 
 	/* Les onglets passent à la ligne pour qu'on voie les six d'un coup. */
 	.rangee { display: flex; flex-wrap: wrap; gap: 0.6rem; }
@@ -27,11 +27,14 @@
 </head>
 <body>
 
-<h1>Icônes de catégories — quatre directions</h1>
+<h1>Icônes de catégories — trois styles</h1>
 <p class="chapeau">
-	Onglets à leur taille réelle sur une dalle 1366×768. Le premier onglet est
-	l'onglet actif : c'est là que se joue la moitié du problème, puisque son fond
-	est sombre.
+	Onglets à leur taille réelle sur une dalle 1366×768, icône portée à 2,5 rem
+	— nettement plus grande qu'avant.
+	Le premier onglet de chaque rangée est l'onglet <strong>actif</strong> : son
+	fond est sombre, et c'est là que la moitié du problème se joue.
+	Chaque jeu a été généré d'un seul tenant, en une planche de six, pour que la
+	graisse de trait soit la même d'une icône à l'autre.
 </p>
 
 <div id="essais"></div>
@@ -46,31 +49,29 @@ const CATS = [
 	['Divers', 'divers'],
 ];
 
-const rangee = (contenu) =>
+const rangee = (dossier, blanchir) =>
 	`<div class="rangee">${CATS.map(([nom, cle], i) =>
-		`<button class="cat" type="button" aria-selected="${i === 0}">${contenu(cle)}${nom}</button>`
+		`<button class="cat" type="button" aria-selected="${i === 0}">` +
+		`<img class="cat-ico" src="/img/essais/${dossier}/${cle}.webp" alt=""` +
+		(blanchir ? '' : ' style="filter:none"') + `>${nom}</button>`
 	).join('')}</div>`;
 
-const image = (dossier, blanchir) => (cle) =>
-	`<img class="cat-ico" src="/img/${dossier}/${cle}.webp" alt=""` +
-	(blanchir ? '' : ' style="filter:none"') + '>';
-
 const DIRECTIONS = [
-	['Actuelle — trait généré',
-	 'Contour fin, monochrome. Passe en blanc sur l’onglet actif.',
-	 rangee(image('icons', true))],
+	['A — Trait épais',
+	 'Contour seul, graisse constante et volontairement grasse, deux ou trois formes par icône. Passe en blanc pur sur l’onglet actif.',
+	 rangee('icones-gras', true)],
 
-	['Gouache — taillée dans les illustrations produits',
-	 'Ce sont les mêmes peintures que sur les tuiles : une seule langue visuelle pour tout l’écran. En couleur, donc pas de passage au blanc — reste à voir si ça tient sur le fond noir.',
-	 rangee(image('essais/icones-gouache', false))],
+	['B — Silhouette pleine',
+	 'Formes massives sans trait fin, détails obtenus par découpes en négatif. C’est ce qui se lit de plus loin, et ce qui vieillit le mieux en petit.',
+	 rangee('icones-plein', true)],
 
-	['Silhouette pleine',
-	 'Formes compactes sans trait fin. C’est ce qui se lit le mieux en petit, mais c’est aussi le plus impersonnel.',
-	 rangee(image('essais/icones-silhouette', true))],
+	['C — Bicolore',
+	 'Trait épais plus une zone remplie en ambre. Plus riche, mais l’aplat de couleur disparaît quand on force le blanc sur l’onglet actif — regarde le premier onglet.',
+	 rangee('icones-duo', true)],
 
-	['Aucune icône',
-	 'Ta remarque de départ : « on s’habitue mieux au texte qu’aux images ». Une barre d’onglets purement typographique est une réponse parfaitement défendable — et la plus sobre.',
-	 rangee(() => '')],
+	['C bis — Bicolore, sans passage au blanc',
+	 'Le même jeu en gardant ses couleurs sur l’onglet actif. À voir si le contraste tient sur le fond noir.',
+	 rangee('icones-duo', false)],
 ];
 
 document.getElementById('essais').innerHTML = DIRECTIONS.map(([titre, note, html]) => `
