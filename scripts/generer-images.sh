@@ -196,12 +196,33 @@ fi
 echo "→ ${#PRODUITS[@]} image(s), style « $STYLE », modèle $MODELE, qualité $QUALITE → $DEST/"
 echo
 
+# appeler_api affiche la réponse brute sur stdout, ou rien en cas d'échec
+# réseau. Jamais la requête, qui porte la clé.
+#
+# --http1.1 : l'API ferme parfois un flux HTTP/2 en cours de route sur ces
+# requêtes longues, ce que curl signale par le code 92. HTTP/1.1 n'a pas ce
+# mode de défaillance.
+appeler_api() {
+	jq -n --arg p "$1" --arg m "$MODELE" --arg q "$QUALITE" --arg s "$TAILLE" \
+		'{model:$m, prompt:$p, n:1, size:$s, quality:$q,
+		  background:"transparent", output_format:"png"}' \
+		| curl -sS --http1.1 --max-time 300 \
+			https://api.openai.com/v1/images/generations \
+			-H "Authorization: Bearer $OPENAI_API_KEY" \
+			-H "Content-Type: application/json" \
+			--data-binary @- || true
+}
+
+ECHECS=()
+
 for entree in "${PRODUITS[@]}"; do
 	slug="${entree%%|*}"
 	sujet="${entree#*|}"
 	sortie="$DEST/$slug.png"
 
-	if [ -f "$sortie" ]; then
+	# On teste les deux extensions : le fichier finit converti en .webp, et sans
+	# ce test le script régénérerait — et refacturerait — tout ce qui existe.
+	if [ -f "$sortie" ] || [ -f "$DEST/$slug.webp" ]; then
 		echo "  = $slug (déjà là)"
 		continue
 	fi
@@ -209,18 +230,21 @@ for entree in "${PRODUITS[@]}"; do
 	prompt=$("style_$STYLE" "$sujet")
 	printf '  · %-22s ' "$slug"
 
-	reponse=$(jq -n --arg p "$prompt" --arg m "$MODELE" --arg q "$QUALITE" --arg s "$TAILLE" \
-		'{model:$m, prompt:$p, n:1, size:$s, quality:$q,
-		  background:"transparent", output_format:"png"}' \
-		| curl -sS https://api.openai.com/v1/images/generations \
-			-H "Authorization: Bearer $OPENAI_API_KEY" \
-			-H "Content-Type: application/json" \
-			--data-binary @-)
+	# La plupart des échecs sont passagers : on réessaie avant d'abandonner.
+	b64=""
+	for tentative in 1 2 3; do
+		reponse=$(appeler_api "$prompt")
+		if b64=$(printf '%s' "$reponse" | jq -er '.data[0].b64_json' 2>/dev/null); then
+			break
+		fi
+		b64=""
+		[ "$tentative" -lt 3 ] && { printf '↻'; sleep 3; }
+	done
 
-	if ! b64=$(printf '%s' "$reponse" | jq -er '.data[0].b64_json' 2>/dev/null); then
-		echo "échec"
-		# Le message d'erreur de l'API, jamais la requête (qui porte la clé).
-			printf '%s' "$reponse" | jq -r '.error.message // "réponse inattendue"' >&2 || echo "réponse illisible de l'API" >&2
+	if [ -z "$b64" ]; then
+		echo " échec"
+		printf '%s' "$reponse" | jq -r '.error.message // empty' 2>/dev/null >&2 || true
+		ECHECS+=("$slug")
 		continue
 	fi
 
@@ -244,4 +268,9 @@ for entree in "${PRODUITS[@]}"; do
 done
 
 echo
-echo "Terminé."
+if [ ${#ECHECS[@]} -gt 0 ]; then
+	echo "Terminé, avec ${#ECHECS[@]} échec(s) : ${ECHECS[*]}"
+	echo "Relancer la commande les reprendra : ce qui existe déjà est ignoré."
+else
+	echo "Terminé."
+fi
