@@ -179,8 +179,13 @@ func serve(database *db.DB, addr string, lan, dev bool, imgDir, watchPath string
 
 	// Les illustrations viennent du disque, jamais de l'exécutable : en ajouter
 	// une sur la caisse doit se résumer à copier un fichier par SSH.
+	//
+	// `no-cache` ne veut pas dire « ne pas garder » mais « toujours revérifier » :
+	// le navigateur conserve l'image et demande simplement si elle a changé, ce
+	// à quoi le serveur répond 304 sans rien renvoyer. On garde donc le bénéfice
+	// du cache sans jamais afficher une image périmée après un dépôt par SSH.
 	mux.Handle("GET /img/", http.StripPrefix("/img/",
-		http.FileServer(http.Dir(imgDir))))
+		revalider(http.FileServer(http.Dir(imgDir)))))
 
 	mux.Handle("GET /", noCache(http.FileServer(http.FS(static))))
 
@@ -233,6 +238,15 @@ func serve(database *db.DB, addr string, lan, dev bool, imgDir, watchPath string
 func noCache(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
+		h.ServeHTTP(w, r)
+	})
+}
+
+// revalider demande au navigateur de revérifier avant de réutiliser un fichier
+// gardé en cache. http.FileServer pose déjà Last-Modified et sait répondre 304.
+func revalider(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache")
 		h.ServeHTTP(w, r)
 	})
 }
