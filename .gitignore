@@ -7,11 +7,11 @@
 # …sauf le modèle, qui ne contient que des noms de variables et des exemples.
 !.env.example
 
-# Images générées : lourdes, et propres à chaque boulangerie. Les illustrations
-# SVG de démonstration, elles, sont versionnées : légères et lisibles en texte.
+# Images générées : lourdes, propres à chaque boulangerie, et reproductibles
+# par scripts/generer-images.sh. Le dépôt reste léger.
 /img/products/*
 !/img/products/.gitkeep
-!/img/products/*.svg
+/img/essais/
 *.db
 *.db-shm
 *.db-wal

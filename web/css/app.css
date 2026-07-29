@@ -451,7 +451,18 @@ button {
 	will-change: transform;
 }
 
-.pay-ico { font-size: 1.25rem; opacity: 0.75; line-height: 1; }
+/* Icônes de paiement : tracé blanc sur fond saturé. Une image matricielle
+   monochrome ne pourrait pas s'éclaircir avec le bouton. */
+.pay-ico {
+	width: 1.7rem;
+	height: 1.7rem;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.7;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	opacity: 0.85;
+}
 
 .pay-cash { background: var(--cash); }
 .pay-card { background: var(--card); }
@@ -462,7 +473,7 @@ button {
 	box-shadow: inset 0 0 0 1px var(--line-2);
 	cursor: default;
 }
-.pay-btn:disabled .pay-ico { opacity: 0.35; }
+.pay-btn:disabled .pay-ico { opacity: 0.4; }
 
 /* --------------------------------------------------------------------------
    Écran de paiement

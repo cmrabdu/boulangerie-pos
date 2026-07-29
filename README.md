@@ -95,22 +95,59 @@ moitié droite en débordant légèrement, pendant qu'un dégradé de la couleur
 la carte passe au-dessus côté texte. Le nom et le prix restent donc lisibles
 quelle que soit l'image.
 
-Le dépôt contient quelques illustrations SVG de démonstration. Pour générer des
-images à la place, avec votre propre clé OpenAI :
+Les images ne sont pas versionnées : elles sont propres à chaque boulangerie et
+se régénèrent en une commande. Trois styles sont disponibles :
+
+| Style | Rendu | Pour |
+|---|---|---|
+| `gouache` *(par défaut)* | Peinte, couleurs chaudes et terreuses | S'accorde au fond papier de l'interface — le choix retenu |
+| `photo` | Photographie culinaire | Le plus réaliste, mais plus disparate d'un produit à l'autre |
+| `plat` | Aplats vectoriels, contour marqué | Silhouettes les plus lisibles, rendu plus « autocollant » |
 
 ```bash
-mkdir -p ~/.config/boulangerie-pos
-chmod 700 ~/.config/boulangerie-pos
-printf 'export OPENAI_API_KEY=%s\n' 'votre-clé' > ~/.config/boulangerie-pos/openai.env
-chmod 600 ~/.config/boulangerie-pos/openai.env
+./scripts/generer-images.sh                  # style gouache, tous les produits
+./scripts/generer-images.sh --style photo    # un autre style
+./scripts/generer-images.sh --essai --style photo croissant   # comparatif
 ```
+
+Le comparatif écrit dans `img/essais/<style>/` et se regarde sur
+`/essai.html`, qui affiche les styles dans la vraie tuile plutôt qu'en pleine
+page : une image se juge à sa place, pas isolée.
+
+Les images sont réduites à 384 px puis converties en WebP, ce qui divise leur
+poids par cinq en conservant la transparence — sur neuf produits, 1,4 Mo
+deviennent 260 Ko. Sur le disque de la caisse, ça compte.
+
+### Générer avec votre clé
+
+Pour générer, avec votre propre clé OpenAI :
 
 ```bash
-source ~/.config/boulangerie-pos/openai.env && ./scripts/generer-images.sh
+cp .env.example .env    # puis y coller la clé
 ```
 
-La clé reste dans votre environnement : le script la lit, ne l'affiche jamais et
-ne l'écrit nulle part. Le fichier vit **hors du dépôt**, qui est public.
+Le script charge `.env` tout seul. La clé n'est jamais affichée, journalisée ni
+recopiée, et n'est envoyée qu'à l'API OpenAI. `.env` est ignoré par git — ce
+dépôt est public.
+
+Modèle : `gpt-image-1.5`. `gpt-image-2` est volontairement écarté, il ne gère
+pas les fonds transparents, or c'est la transparence qui permet à un produit de
+se poser sur la carte sans rectangle blanc autour.
+
+## Icônes
+
+Les icônes de catégories et de paiement sont **dessinées au trait**, en ligne
+dans la page. Le choix a été mesuré contre des icônes générées par IA : ces
+dernières perdent sur trois points, et pas sur le goût.
+
+- Elles sont monochromes, donc incapables de porter la couleur de la catégorie.
+- Sur l'onglet actif, qui est sombre, une icône brune devient illisible ; un
+  tracé passe en blanc.
+- Générée séparément, chaque icône a sa propre graisse de trait : la barre
+  d'onglets perd son unité.
+
+Les illustrations de **produits**, elles, gagnent nettement à être générées :
+la comparaison est visible sur `/essai.html`.
 
 ## Déployer sur la caisse
 

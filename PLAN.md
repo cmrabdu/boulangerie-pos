@@ -110,8 +110,15 @@ Statuts : ⬜ à faire · 🟡 en cours · ✅ terminé et vérifié
 - [x] 7b.4 Un produit sans image s'affiche exactement comme avant
 - [x] 7b.5 Icônes de catégories dessinées au trait, en ligne dans la page,
       déduites du nom de la catégorie par mots-clés — le texte reste affiché
-- [x] 7b.6 Six illustrations SVG de démonstration
-- [x] 7b.7 Script de génération lisant la clé depuis l'environnement
+- [x] 7b.6 Script de génération lisant la clé depuis l'environnement
+- [x] 7b.7 Trois styles comparés dans la vraie tuile (`/essai.html`) :
+      gouache retenue, photo et plat conservés en option
+- [x] 7b.8 Icônes générées par IA testées contre le tracé vectoriel :
+      **écartées** — monochromes donc sans couleur de catégorie, illisibles sur
+      l'onglet actif sombre, graisses de trait incohérentes entre elles
+- [x] 7b.9 Icônes de paiement dessinées, remplaçant les caractères « € » et « ▭ »
+- [x] 7b.10 Réduction à 384 px puis WebP : 1,4 Mo → 260 Ko pour neuf produits,
+      transparence conservée
 
 ### Phase 8 — Durcissement ⬜
 
@@ -163,6 +170,12 @@ Statuts : ⬜ à faire · 🟡 en cours · ✅ terminé et vérifié
 ---
 
 ## Journal
+
+- **2026-07-29** — Illustrations générées (gpt-image-1.5, fond transparent) et
+  comparées dans la tuile réelle. Gouache retenue. Icônes IA testées puis
+  écartées au profit du tracé vectoriel, pour des raisons de fonction et non de
+  goût. Images en WebP : 1,4 Mo → 260 Ko. Vérifié en 1366×768, tuile toujours
+  221×123 px, aucun débordement.
 
 - **2026-07-29** — Écran validé par le user sur tablette. Ajouts : images des
   produits en fond de carte sans agrandir les cartes, icônes de catégories,
