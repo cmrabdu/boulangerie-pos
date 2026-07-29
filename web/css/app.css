@@ -149,23 +149,22 @@ button {
 /* Le jeu d'icônes lui-même ne s'affiche jamais : seules ses copies via <use>. */
 .sprite { display: none; }
 
-/* Icônes dessinées au trait : elles restent nettes à toute taille et prennent
-   la couleur de la catégorie. Le texte reste à côté — on s'habitue mieux à un
+/* Icônes de catégories. Le texte reste affiché à côté — on s'habitue mieux à un
    mot qu'à un pictogramme, l'icône ne fait qu'accélérer la reconnaissance. */
 .cat-ico {
-	width: 1.65rem;
-	height: 1.65rem;
+	width: 1.9rem;
+	height: 1.9rem;
 	flex: 0 0 auto;
-	fill: none;
-	stroke: var(--dot, var(--ink-3));
-	stroke-width: 1.6;
-	stroke-linecap: round;
-	stroke-linejoin: round;
+	object-fit: contain;
 }
 
-/* Sur l'onglet actif (fond sombre), l'icône passe en blanc : une couleur
-   sourde sur fond noir serait illisible. */
-.cat[aria-selected="true"] .cat-ico { stroke: #fff; }
+/* Sur l'onglet actif, le fond devient noir et une icône brun foncé y disparaît.
+   `brightness(0) invert(1)` repeint tout pixel opaque en blanc pur en
+   respectant la transparence — ce qu'une image matricielle monochrome ne sait
+   pas faire autrement. */
+.cat[aria-selected="true"] .cat-ico {
+	filter: brightness(0) invert(1);
+}
 
 .cat[aria-selected="true"] {
 	background: var(--ink);
@@ -178,6 +177,7 @@ button {
    -------------------------------------------------------------------------- */
 
 .grid-wrap {
+	position: relative;             /* ancre le pavé « montant libre » */
 	min-height: 0;
 	overflow-y: auto;
 	overscroll-behavior: contain;
@@ -279,8 +279,108 @@ button {
 /* Enfoncement au doigt. Appliqué dès le touchstart par le JS, donc perçu comme
    instantané, et retiré au relâchement. */
 .tile.is-down, .cat.is-down, .pad-btn.is-down,
-.pay-btn.is-down, .qty-btn.is-down, .confirm.is-down {
+.pay-btn.is-down, .qty-btn.is-down, .confirm.is-down,
+.libre-touche.is-down, .libre-ok.is-down, .libre-annuler.is-down {
 	transform: scale(0.962);
+}
+
+/* --------------------------------------------------------------------------
+   Montant libre
+
+   Une tuile à part dans « Divers », puis un pavé qui glisse par-dessus la
+   grille. Le ticket reste visible à droite : on voit le total bouger pendant
+   qu'on tape, ce qui évite de saisir un montant sans savoir où l'on en est.
+   -------------------------------------------------------------------------- */
+
+.tile-libre {
+	background: var(--surface-2);
+	box-shadow: inset 0 0 0 2px var(--line-2);
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	gap: 0.35rem;
+}
+
+.tile-libre .tile-name  { color: var(--ink-2); max-width: 100%; }
+.tile-libre .tile-price { color: var(--ink-3); font-weight: 550; }
+
+.libre {
+	position: absolute;
+	inset: 0;
+	z-index: 5;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 1.1rem;
+	border-radius: var(--r-md);
+	background: var(--surface);
+	box-shadow: var(--shadow-lg);
+	will-change: transform;
+}
+
+.libre-titre {
+	margin: 0;
+	text-align: center;
+	font-size: 0.82rem;
+	font-weight: 650;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--ink-3);
+}
+
+.libre-ecran {
+	display: block;
+	padding: 0.3rem 0;
+	text-align: center;
+	font-size: 3.4rem;
+	font-weight: 660;
+	letter-spacing: -0.035em;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
+
+.libre-pad {
+	flex: 1;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.6rem;
+	min-height: 0;
+}
+
+.libre-touche {
+	display: grid;
+	place-items: center;
+	min-height: 3.4rem;
+	border-radius: var(--r-md);
+	background: var(--surface-2);
+	box-shadow: inset 0 0 0 1px var(--line);
+	font-size: 1.7rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	transition: transform var(--fast) var(--ease);
+	will-change: transform;
+}
+
+.libre-secondaire { font-size: 1.35rem; color: var(--ink-2); }
+
+.libre-actions { display: grid; grid-template-columns: 1fr 1.6fr; gap: 0.6rem; }
+
+.libre-annuler, .libre-ok {
+	min-height: 4rem;
+	border-radius: var(--r-md);
+	font-size: 1.1rem;
+	font-weight: 620;
+	transition: transform var(--fast) var(--ease), opacity var(--fast) linear;
+}
+
+.libre-annuler { background: var(--surface-2); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line-2); }
+.libre-ok      { background: var(--ink); color: #fff; }
+
+.libre-ok:disabled {
+	background: var(--surface-2);
+	color: var(--ink-3);
+	box-shadow: inset 0 0 0 1px var(--line);
+	cursor: default;
 }
 
 /* --------------------------------------------------------------------------

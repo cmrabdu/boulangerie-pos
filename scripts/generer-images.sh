@@ -78,16 +78,77 @@ STYLES="photo plat gouache"
 # Produits : slug|description du sujet
 # --------------------------------------------------------------------------
 
+# Les slugs doivent correspondre à ceux que calcule internal/db.Slugify à partir
+# du nom du produit, sans quoi la caisse ne trouvera pas l'image.
 PRODUITS=(
-	"croissant|un croissant au beurre doré et feuilleté"
-	"couque-au-chocolat|un pain au chocolat feuilleté avec ses deux barres de chocolat"
-	"pain-aux-raisins|un pain aux raisins en spirale"
+	# Pains
 	"baguette|une baguette de pain française dorée et croustillante"
+	"baguette-tradition|une baguette de tradition française à la croûte très craquelée"
+	"pistolet|un petit pain rond belge fendu au milieu, doré"
+	"sandwich|un petit pain long et moelleux à sandwich"
 	"pain-gris-500g|une miche de pain gris rustique à la croûte farinée"
-	"eclair-chocolat|un éclair au chocolat au glaçage brillant"
-	"couque-au-beurre|une couque au beurre briochée et dorée"
+	"pain-blanc-500g|un pain de mie blanc en miche rectangulaire dorée"
+	"pain-complet|un pain complet rond à la croûte foncée"
+	"pain-multicereales|un pain aux céréales couvert de graines"
+	"pain-aux-noix|un pain rustique aux noix"
+	"ciabatta|une ciabatta italienne allongée et farinée"
+	"pain-d-epeautre|un pain d'épeautre rond et rustique"
+	"demi-gris|une demi-miche de pain gris"
+
+	# Viennoiseries
+	"croissant|un croissant au beurre doré et feuilleté"
+	"couque-au-beurre|une couque au beurre briochée en escargot, dorée"
+	"couque-au-chocolat|un pain au chocolat feuilleté avec ses deux barres de chocolat"
+	"couque-suisse|une couque suisse à la crème pâtissière et aux pépites de chocolat"
+	"pain-aux-raisins|un pain aux raisins en spirale"
 	"chausson-aux-pommes|un chausson aux pommes doré"
+	"croissant-amandes|un croissant aux amandes couvert d'amandes effilées et de sucre glace"
+	"donut|un donut glacé au sucre rose avec des vermicelles"
+	"cramique|un cramique belge, brioche aux raisins secs, tranché"
+	"craquelin|un craquelin belge, brioche au sucre perlé"
+
+	# Pâtisseries
+	"eclair-chocolat|un éclair au chocolat au glaçage brillant"
+	"eclair-vanille|un éclair à la vanille au glaçage blanc nacré"
+	"merveilleux|un merveilleux belge, meringue et crème fouettée couverte de copeaux de chocolat"
+	"tarte-au-riz-part|une part de tarte au riz belge, crème dorée"
+	"tarte-aux-pommes-part|une part de tarte aux pommes aux lamelles apparentes"
+	"tarte-au-sucre-part|une part de tarte au sucre dorée et caramélisée"
+	"millefeuille|un millefeuille à la crème pâtissière et au glaçage marbré"
+	"tiramisu|une part de tiramisu saupoudrée de cacao"
+	"moelleux-chocolat|un moelleux au chocolat au cœur fondant"
+	"gateau-6-pers|un gâteau rond entier décoré à la crème, pour six personnes"
+	"gateau-8-pers|un grand gâteau rond entier décoré à la crème et aux fruits"
+
+	# Sandwichs
+	"fromage|un sandwich au fromage dans un petit pain, garniture visible"
+	"jambon|un sandwich au jambon dans un petit pain, garniture visible"
+	"jambon-fromage|un sandwich jambon-fromage dans un petit pain, garniture visible"
+	"thon|un sandwich au thon et crudités dans un petit pain"
+	"poulet-curry|un sandwich au poulet curry dans un petit pain"
+	"americain|un sandwich à l'américain, préparation de viande hachée, dans un petit pain"
+	"crabe|un sandwich au surimi et crudités dans un petit pain"
+	"club-sandwich|un club sandwich en triangles superposés avec pics"
+	"panini|un panini grillé aux marques de gril bien visibles"
+
+	# Boissons
+	"eau-50cl|une bouteille d'eau plate de 50 cl en plastique transparent"
+	"eau-petillante-50cl|une bouteille d'eau pétillante de 50 cl aux bulles visibles"
+	"coca-33cl|une canette de soda au cola rouge de 33 cl"
+	"ice-tea-33cl|une canette de thé glacé jaune de 33 cl"
+	"jus-d-orange|un verre de jus d'orange frais"
 	"cafe|une tasse de café expresso en porcelaine blanche"
+	"cappuccino|un cappuccino en tasse avec sa mousse de lait"
+	"chocolat-chaud|une tasse de chocolat chaud avec de la crème fouettée"
+	"the|une tasse de thé clair avec son sachet"
+
+	# Divers
+	"sac|un petit sac en papier kraft de boulangerie"
+	"grand-sac|un grand sac en papier kraft de boulangerie avec anses"
+	"bougies|un paquet de bougies d'anniversaire colorées"
+	"oeufs-6|une boîte de six œufs frais, ouverte"
+	"chocolats-250g|un ballotin de pralines belges assorties"
+	"confiture|un pot de confiture de fraises avec son couvercle en tissu"
 )
 
 # --------------------------------------------------------------------------

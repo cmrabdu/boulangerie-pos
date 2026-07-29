@@ -120,6 +120,19 @@ Statuts : ⬜ à faire · 🟡 en cours · ✅ terminé et vérifié
 - [x] 7b.10 Réduction à 384 px puis WebP : 1,4 Mo → 260 Ko pour neuf produits,
       transparence conservée
 
+### Phase 7 ter — Montant libre ✅
+
+- [x] 7t.1 Tuile « Montant libre » dans la catégorie fourre-tout (`Divers`, ou
+      la dernière si aucune ne correspond)
+- [x] 7t.2 Pavé qui glisse par-dessus la grille, ticket toujours visible à
+      droite pour voir le total bouger pendant la saisie
+- [x] 7t.3 Saisie en centimes qui défilent, comme un terminal de paiement :
+      3 puis 5 puis 0 donne 3,50 €. Aucune virgule à placer, donc aucune
+      confusion possible entre 3,50 et 35,0
+- [x] 7t.4 Chaque montant libre est une ligne distincte, jamais fusionnée
+- [x] 7t.5 Vérifié de bout en bout : 3,75 € + 2,00 € = 5,75 €, 10 € donnés,
+      4,25 € rendus, vente retrouvée dans l'export CSV
+
 ### Phase 8 — Durcissement ⬜
 
 - [ ] 8.1 Sauvegarde automatique de la base (clé USB ou second emplacement)
@@ -168,6 +181,14 @@ Statuts : ⬜ à faire · 🟡 en cours · ✅ terminé et vérifié
    vérifier reste utile.
 
 ---
+
+## Ce qui manque encore
+
+- **Annuler une vente déjà encaissée.** « Tout effacer » vide le panier *avant*
+  paiement ; une fois la vente enregistrée, rien ne permet de revenir dessus.
+- **Sauvegarde de la base.** Si le disque lâche, tout l'historique part avec.
+- **Produits au poids** — le modèle ne connaît que le prix fixe par article.
+  À trancher quand le vrai catalogue arrivera.
 
 ## Direction visuelle — arrêtée le 29/07
 

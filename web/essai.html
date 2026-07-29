@@ -47,14 +47,6 @@
 		gap: 0.9rem;
 	}
 
-	/* Icône matricielle : même emprise que le tracé vectoriel, pour que la
-	   comparaison porte sur le rendu et non sur la taille. */
-	.cat-img {
-		width: 1.65rem;
-		height: 1.65rem;
-		flex: 0 0 auto;
-		object-fit: contain;
-	}
 </style>
 </head>
 <body>
@@ -66,30 +58,16 @@
 	isolée mais sa lisibilité en grille, à un mètre, du coin de l'œil.
 </p>
 
-<!-- Le jeu d'icônes vectorielles vit dans index.html. On l'y emprunte plutôt
-     que de le dupliquer : cette page est un outil de travail, pas de la
-     production, et deux copies divergeraient tôt ou tard. -->
-<div id="sprite-hote" hidden></div>
 
 <div id="essais"></div>
 
-<h1 class="essai-titre" style="margin-top:1rem">Icônes — tracé vectoriel contre image générée</h1>
 <p class="essai-note">
-	Onglets à leur taille réelle, icône de 23 px. La question n'est pas laquelle
-	est la plus jolie en grand, mais laquelle reste nette et cohérente à cette
-	taille-là.
+	Le comparatif d'icônes qui figurait ici a rempli son office : les icônes
+	générées sont en place dans l'application, passées en blanc sur l'onglet
+	actif par un filtre. Le raisonnement est consigné dans PLAN.md.
 </p>
 
-<div id="icones"></div>
-
 <script>
-fetch('/index.html')
-	.then((r) => r.text())
-	.then((html) => {
-		const m = html.match(/<svg class="sprite"[\s\S]*?<\/svg>/);
-		if (m) document.getElementById('sprite-hote').innerHTML = m[0];
-	});
-
 const STYLES = [
 	['plat', 'Illustration plate', 'Aplats, contour marqué, palette restreinte. Le plus homogène en grille.'],
 	['photo', 'Photographie', 'Matière et volume. Le plus appétissant isolé, le plus disparate en grille.'],
@@ -116,45 +94,6 @@ document.getElementById('essais').innerHTML = STYLES.map(([cle, titre, note]) =>
 		</div>
 	</section>`).join('');
 
-/* --- Icônes ------------------------------------------------------------- */
-
-const CATS = [
-	['Pains', 'i-pain', 'pain', 'wheat'],
-	['Viennoiseries', 'i-croissant', 'croissant', 'butter'],
-	['Pâtisseries', 'i-patisserie', 'patisserie', 'berry'],
-	['Sandwichs', 'i-sandwich', 'sandwich', 'herb'],
-	['Boissons', 'i-boisson', 'boisson', 'water'],
-	['Divers', 'i-divers', 'divers', 'stone'],
-];
-
-const onglets = (rendu) =>
-	`<nav class="cats" style="overflow:visible">${CATS.map((c, i) =>
-		`<button class="cat" type="button" aria-selected="${i === 0}">${rendu(c)}${c[0]}</button>`
-	).join('')}</nav>`;
-
-document.getElementById('icones').innerHTML = `
-	<section class="essai-bloc">
-		<h2>Tracé vectoriel, dessiné à la main</h2>
-		<p>Net à toute taille, graisse de trait identique partout, prend la couleur de la catégorie.</p>
-		${onglets(([, sym, , teinte]) =>
-			`<svg class="cat-ico" style="--dot:var(--c-${teinte})" aria-hidden="true"><use href="#${sym}"></use></svg>`)}
-	</section>
-	<section class="essai-bloc">
-		<h2>Image générée, style trait</h2>
-		<p>Chaque icône est générée séparément : ni la graisse de trait ni le cadrage ne sont partagés.</p>
-		${onglets(([, , cle]) =>
-			`<img class="cat-img" src="/img/essais/icones-trait/${cle}.png" alt="">`)}
-	</section>
-	<section class="essai-bloc">
-		<h2>Boutons de paiement</h2>
-		<p>Icône actuelle (caractère « € » et « ▭ ») contre image générée.</p>
-		<div style="display:grid;grid-template-columns:repeat(4,11rem);gap:0.7rem;max-width:48rem">
-			<button class="pay-btn pay-cash" type="button"><span class="pay-ico">€</span><span>Cash</span></button>
-			<button class="pay-btn pay-card" type="button"><span class="pay-ico">▭</span><span>Bancontact</span></button>
-			<button class="pay-btn pay-cash" type="button"><img src="/img/essais/icones-trait/cash.png" alt="" style="width:1.6rem;height:1.6rem;object-fit:contain"><span>Cash</span></button>
-			<button class="pay-btn pay-card" type="button"><img src="/img/essais/icones-trait/carte.png" alt="" style="width:1.6rem;height:1.6rem;object-fit:contain"><span>Bancontact</span></button>
-		</div>
-	</section>`;
 </script>
 
 </body>

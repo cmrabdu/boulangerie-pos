@@ -48,6 +48,10 @@ const state = {
 	method: null,        // 'cash' | 'card' pendant le paiement
 	givenCents: null,    // ce que le client a donné, en cash
 	busy: false,         // une vente est en cours d'enregistrement
+
+	libreCatId: null,    // catégorie qui accueille la tuile « Montant libre »
+	libreCents: 0,       // montant en cours de saisie
+	libreSeq: 0,         // compteur : chaque montant libre est une ligne à part
 };
 
 const el = (id) => document.getElementById(id);
@@ -63,6 +67,8 @@ const dom = {
 	change: el('change'), changeAmount: el('change-amount'),
 	cardWait: el('card-wait'), confirm: el('confirm'),
 	done: el('done'), doneText: el('done-text'),
+	libre: el('libre'), libreEcran: el('libre-ecran'),
+	libreOk: document.querySelector('.libre-ok'),
 	check: document.querySelector('.check'),
 	checkCircle: document.querySelector('.check-circle'),
 	checkMark: document.querySelector('.check-mark'),
@@ -100,7 +106,8 @@ function dueCents(method) {
    Retour tactile — la partie qui doit être instantanée
    -------------------------------------------------------------------------- */
 
-const PRESSABLE = '.tile, .cat, .pad-btn, .pay-btn:not(:disabled), .qty-btn, .confirm';
+const PRESSABLE = '.tile, .cat, .pad-btn, .pay-btn:not(:disabled), .qty-btn, .confirm, ' +
+	'.libre-touche, .libre-annuler, .libre-ok:not(:disabled)';
 
 /* `pointerdown` plutôt que `click` : l'enfoncement est visible avant même que
    le doigt se relève. C'est ce décalage de ~80 ms qui fait toute la différence
@@ -161,6 +168,12 @@ async function loadCatalog() {
 	state.activeCatId = cat.id;
 	previousName = cat.name;
 
+	// La tuile « Montant libre » va dans la catégorie fourre-tout si elle
+	// existe, sinon dans la dernière — c'est là qu'on va chercher ce qui ne
+	// rentre nulle part ailleurs.
+	const fourreTout = state.catalog.find((c) => /divers|autre|reste/i.test(c.name));
+	state.libreCatId = (fourreTout || state.catalog[state.catalog.length - 1]).id;
+
 	renderCats();
 	renderGrid(false);
 }
@@ -205,25 +218,24 @@ setInterval(verifierCatalogue, 8000);
    icône utiliser, on la devine donc par mots-clés. Une catégorie inattendue
    tombe sur l'icône générique, ce qui est toujours mieux que rien. */
 const ICONES = [
-	[/pain|boulang|miche|baguet/, 'i-pain', 'wheat'],
-	[/viennois|croissant|couque|donut/, 'i-croissant', 'butter'],
-	[/p[âa]tiss|g[âa]teau|tarte|dessert|sucr/, 'i-patisserie', 'berry'],
-	[/sandwich|snack|salade|tartine|panini|baguette garnie/, 'i-sandwich', 'herb'],
-	[/boisson|caf[ée]|jus|drink|soda|th[ée]/, 'i-boisson', 'water'],
+	[/pain|boulang|miche|baguet/, 'pain'],
+	[/viennois|croissant|couque|donut/, 'croissant'],
+	[/p[âa]tiss|g[âa]teau|tarte|dessert|sucr/, 'patisserie'],
+	[/sandwich|snack|salade|tartine|panini|baguette garnie/, 'sandwich'],
+	[/boisson|caf[ée]|jus|drink|soda|th[ée]/, 'boisson'],
 ];
 
-function iconeCategorie(nom, couleur) {
+function iconeCategorie(nom) {
 	const n = nom.toLowerCase();
-	for (const [motif, icone, teinte] of ICONES) {
-		if (motif.test(n)) return { icone, teinte: couleur || teinte };
+	for (const [motif, icone] of ICONES) {
+		if (motif.test(n)) return icone;
 	}
-	return { icone: 'i-divers', teinte: couleur || 'stone' };
+	return 'divers';
 }
 
 function renderCats() {
 	dom.cats.innerHTML = '';
 	for (const c of state.catalog) {
-		const { icone, teinte } = iconeCategorie(c.name, c.color);
 		const b = document.createElement('button');
 		b.type = 'button';
 		b.className = 'cat';
@@ -231,8 +243,8 @@ function renderCats() {
 		b.setAttribute('role', 'tab');
 		b.setAttribute('aria-selected', String(c.id === state.activeCatId));
 		b.innerHTML =
-			`<svg class="cat-ico" style="--dot:var(--c-${teinte})" aria-hidden="true">` +
-			`<use href="#${icone}"></use></svg>${escapeHtml(c.name)}`;
+			`<img class="cat-ico" src="/img/icons/${iconeCategorie(c.name)}.webp" alt="">` +
+			escapeHtml(c.name);
 		dom.cats.appendChild(b);
 	}
 }
@@ -256,6 +268,18 @@ function renderGrid(withAnimation = true) {
 				: '') +
 			`<span class="tile-name">${escapeHtml(p.name)}</span>` +
 			`<span class="tile-price">${money(p.priceCents)}</span>`;
+		dom.grid.appendChild(b);
+	}
+
+	if (cat.id === state.libreCatId) {
+		const b = document.createElement('button');
+		b.type = 'button';
+		b.className = 'tile tile-libre';
+		b.dataset.libre = '1';
+		b.setAttribute('aria-label', 'Montant libre, prix à saisir');
+		b.innerHTML =
+			'<span class="tile-name">Montant libre</span>' +
+			'<span class="tile-price">Prix à saisir</span>';
 		dom.grid.appendChild(b);
 	}
 
@@ -346,6 +370,76 @@ function renderCart(highlightId) {
 }
 
 /* --------------------------------------------------------------------------
+   Montant libre
+
+   La saisie se fait en centimes qui défilent vers la gauche, comme sur un
+   terminal de paiement : taper 3 puis 5 puis 0 donne 3,50 €. Pas de virgule à
+   placer, donc aucune erreur possible entre 3,50 et 35,0.
+   -------------------------------------------------------------------------- */
+
+const LIBRE_MAX = 99999; // 999,99 € — au-delà, c'est une faute de frappe
+
+function ouvrirLibre() {
+	state.libreCents = 0;
+	majEcranLibre();
+	dom.libre.hidden = false;
+	dom.libre.style.pointerEvents = '';
+	animate(dom.libre, [
+		{ opacity: 0, transform: 'translateY(-0.9rem)' },
+		{ opacity: 1, transform: 'translateY(0)' },
+	], 220);
+}
+
+/* Le pavé recouvre la grille : tant qu'il est dans le document, il intercepte
+   les touches, visible ou non. On coupe donc ses événements dès la première
+   image de la fermeture, et on le masque par deux chemins indépendants — la
+   fin de l'animation, et un délai de secours. Une animation qui n'aboutit pas
+   laisserait sinon un panneau transparent bloquant toute la grille. */
+function fermerLibre() {
+	dom.libre.style.pointerEvents = 'none';
+
+	const cacher = () => {
+		dom.libre.hidden = true;
+		dom.libre.style.pointerEvents = '';
+	};
+
+	const sortie = animate(dom.libre, [
+		{ opacity: 1, transform: 'translateY(0)' },
+		{ opacity: 0, transform: 'translateY(-0.6rem)' },
+	], 170, { fill: 'forwards' });
+
+	if (sortie) sortie.finished.then(cacher, cacher);
+	setTimeout(cacher, 300);
+}
+
+function toucheLibre(chiffre) {
+	const suivant = state.libreCents * 10 + chiffre;
+	if (suivant > LIBRE_MAX) return;   // on ignore plutôt que de tronquer
+	state.libreCents = suivant;
+	majEcranLibre();
+}
+
+function majEcranLibre() {
+	dom.libreEcran.textContent = money(state.libreCents);
+	dom.libreOk.disabled = state.libreCents === 0;
+	animate(dom.libreEcran, [{ transform: 'scale(1.03)' }, { transform: 'scale(1)' }], 130);
+}
+
+/* Chaque montant libre est une ligne distincte, jamais fusionnée avec une
+   autre : deux articles hors catalogue à 2,00 € n'ont aucune raison d'être le
+   même article. D'où l'identifiant négatif, qui ne peut entrer en collision
+   avec aucun produit du catalogue. */
+function ajouterLibre() {
+	if (state.libreCents <= 0) return;
+	const id = -(++state.libreSeq);
+	state.cart.set(id, {
+		id, name: 'Montant libre', priceCents: state.libreCents, qty: 1,
+	});
+	fermerLibre();
+	renderCart(id);
+}
+
+/* --------------------------------------------------------------------------
    Le total qui roule
    -------------------------------------------------------------------------- */
 
@@ -361,7 +455,14 @@ function rollTotal(from, to) {
 	cancelAnimationFrame(totalRAF);
 	displayedTotal = to;
 
-	if (from === to) { dom.total.textContent = money(to); return; }
+	/* La valeur exacte est posée IMMÉDIATEMENT, avant toute animation. Le
+	   défilement n'est qu'un habillage : s'il ne démarre pas — onglet en
+	   arrière-plan, requestAnimationFrame ralenti, préférence système pour
+	   moins d'animations — l'écran affiche quand même le bon total. Un total
+	   faux à l'écran est le pire défaut qu'une caisse puisse avoir. */
+	dom.total.textContent = money(to);
+
+	if (from === to) return;
 
 	animate(dom.total, [
 		{ transform: 'scale(1.045)' },
@@ -492,7 +593,10 @@ async function confirmPayment() {
 	dom.confirm.textContent = 'Enregistrement…';
 
 	const lines = [...state.cart.values()].map((l) => ({
-		productId: l.id,
+		// Les montants libres portent un identifiant négatif interne : le
+		// journal des ventes n'a pas à le connaître, il n'y a pas de produit
+		// derrière.
+		productId: l.id > 0 ? l.id : 0,
 		name: l.name,
 		unitPriceCents: l.priceCents,
 		quantity: l.qty,
@@ -587,6 +691,9 @@ function finishSale(change) {
 document.addEventListener('click', (e) => {
 	const cat = e.target.closest('.cat');
 	if (cat) {
+		// Changer de catégorie referme le pavé : il masque la grille qu'on
+		// vient justement de demander à voir.
+		if (!dom.libre.hidden) fermerLibre();
 		const id = Number(cat.dataset.catId);
 		if (id !== state.activeCatId) {
 			state.activeCatId = id;
@@ -599,7 +706,23 @@ document.addEventListener('click', (e) => {
 	}
 
 	const tile = e.target.closest('.tile');
-	if (tile) { addProduct(Number(tile.dataset.productId)); return; }
+	if (tile) {
+		if (tile.dataset.libre) ouvrirLibre();
+		else addProduct(Number(tile.dataset.productId));
+		return;
+	}
+
+	const touche = e.target.closest('.libre-touche, .libre-annuler, .libre-ok');
+	if (touche) {
+		if (touche.dataset.chiffre) { toucheLibre(Number(touche.dataset.chiffre)); return; }
+		switch (touche.dataset.action) {
+			case 'vider':   state.libreCents = 0; majEcranLibre(); break;
+			case 'effacer': state.libreCents = Math.floor(state.libreCents / 10); majEcranLibre(); break;
+			case 'fermer':  fermerLibre(); break;
+			case 'ajouter': ajouterLibre(); break;
+		}
+		return;
+	}
 
 	const qty = e.target.closest('.qty-btn');
 	if (qty) {
@@ -630,7 +753,9 @@ document.addEventListener('click', (e) => {
 
 // Utile au clavier de secours et pendant le développement.
 document.addEventListener('keydown', (e) => {
-	if (e.key === 'Escape' && !dom.payScreen.hidden) closePayment();
+	if (e.key !== 'Escape') return;
+	if (!dom.payScreen.hidden) closePayment();
+	else if (!dom.libre.hidden) fermerLibre();
 });
 
 /* Le zoom à deux doigts est déjà bloqué par la balise viewport, mais Safari sur

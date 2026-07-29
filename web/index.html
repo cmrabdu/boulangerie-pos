@@ -53,12 +53,12 @@
        contre une carte (rectangle + bande sur toute la largeur) : les deux
        silhouettes ne peuvent pas se confondre. -->
   <symbol id="i-cash" viewBox="0 0 24 24">
-    <rect x="1.8" y="6" width="20.4" height="12" rx="2.4"/>
-    <circle cx="12" cy="12" r="3.1"/>
+    <rect x="1.8" y="5.2" width="20.4" height="13.6" rx="2.4"/>
+    <circle cx="12" cy="12" r="3.3"/>
   </symbol>
   <symbol id="i-carte" viewBox="0 0 24 24">
-    <rect x="1.8" y="4.8" width="20.4" height="14.4" rx="2.4"/>
-    <path d="M1.8 10.2h20.4"/>
+    <rect x="1.8" y="5.2" width="20.4" height="13.6" rx="2.4"/>
+    <path d="M1.8 10.4h20.4"/>
   </symbol>
 </svg>
 
@@ -69,6 +69,32 @@
     <nav class="cats" id="cats" aria-label="Catégories"></nav>
     <div class="grid-wrap">
       <div class="grid" id="grid"></div>
+
+      <!-- Montant libre : encaisser ce qui n'est pas au catalogue. Le pavé
+           glisse par-dessus la grille et laisse le ticket visible à droite,
+           pour qu'on voie le total bouger en même temps qu'on tape. -->
+      <section class="libre" id="libre" hidden aria-label="Montant libre">
+        <p class="libre-titre">Montant libre</p>
+        <output class="libre-ecran" id="libre-ecran">0,00 €</output>
+        <div class="libre-pad" id="libre-pad">
+          <button class="libre-touche" type="button" data-chiffre="1">1</button>
+          <button class="libre-touche" type="button" data-chiffre="2">2</button>
+          <button class="libre-touche" type="button" data-chiffre="3">3</button>
+          <button class="libre-touche" type="button" data-chiffre="4">4</button>
+          <button class="libre-touche" type="button" data-chiffre="5">5</button>
+          <button class="libre-touche" type="button" data-chiffre="6">6</button>
+          <button class="libre-touche" type="button" data-chiffre="7">7</button>
+          <button class="libre-touche" type="button" data-chiffre="8">8</button>
+          <button class="libre-touche" type="button" data-chiffre="9">9</button>
+          <button class="libre-touche libre-secondaire" type="button" data-action="vider">C</button>
+          <button class="libre-touche" type="button" data-chiffre="0">0</button>
+          <button class="libre-touche libre-secondaire" type="button" data-action="effacer" aria-label="Effacer le dernier chiffre">⌫</button>
+        </div>
+        <div class="libre-actions">
+          <button class="libre-annuler" type="button" data-action="fermer">Annuler</button>
+          <button class="libre-ok" type="button" data-action="ajouter" disabled>Ajouter</button>
+        </div>
+      </section>
     </div>
   </main>
 

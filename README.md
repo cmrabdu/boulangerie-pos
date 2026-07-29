@@ -18,6 +18,7 @@ que de grosse calculatrice, sur un PC tactile à Celeron J1900.
 - Encaissement **espèces** avec propositions de coupures et **calcul du rendu**
 - Encaissement **Bancontact** (le montant est encodé sur le terminal)
 - Arrondi belge aux 5 centimes sur les espèces, toujours affiché explicitement
+- **Montant libre** pour encaisser ce qui n'est pas au catalogue
 - Journal des ventes en SQLite, exportable en CSV ouvrable dans Excel
 - Illustrations des produits et icônes de catégories, sans agrandir les cartes
 - Catalogue mis à jour en déposant un fichier CSV : ni bouton, ni redémarrage
@@ -133,6 +134,19 @@ dépôt est public.
 Modèle : `gpt-image-1.5`. `gpt-image-2` est volontairement écarté, il ne gère
 pas les fonds transparents, or c'est la transparence qui permet à un produit de
 se poser sur la carte sans rectangle blanc autour.
+
+## Montant libre
+
+Une tuile « Montant libre » apparaît dans la catégorie fourre-tout — `Divers`
+si elle existe, la dernière sinon. Elle ouvre un pavé numérique qui glisse
+par-dessus la grille, le ticket restant visible à droite.
+
+La saisie se fait **en centimes qui défilent**, comme sur un terminal de
+paiement : taper 3, 5, 0 donne 3,50 €. Il n'y a pas de virgule à placer, donc
+aucune confusion possible entre 3,50 € et 35,00 €.
+
+Chaque montant libre forme une ligne distincte du ticket : deux articles hors
+catalogue à 2,00 € n'ont aucune raison d'être le même article.
 
 ## Icônes
 

@@ -57,8 +57,8 @@ généreuses, style pictogramme d'application moderne lisible à 24 pixels. $COM
 
 ICONES=(
 	"pain|une miche de pain et une baguette"
-	"croissant|un croissant"
-	"patisserie|une part de tarte aux fruits"
+	"croissant|un croissant vu de face, réduit à une forme de croissant de lune aux pointes effilées"
+	"patisserie|un cupcake vu de face, réduit à une caissette cannelée surmontée d'un dôme de crème"
 	"sandwich|un sandwich garni coupé en deux"
 	"boisson|un gobelet de boisson chaude à emporter"
 	"divers|un sac en papier de boulangerie"
