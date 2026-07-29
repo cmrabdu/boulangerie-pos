@@ -2,10 +2,11 @@
 #
 # Génère les illustrations de produits pour la caisse.
 #
-# La clé API est lue depuis la variable d'environnement OPENAI_API_KEY et n'est
-# ni écrite, ni affichée, ni enregistrée par ce script.
+# La clé API est lue depuis OPENAI_API_KEY, chargée depuis .env s'il existe.
+# Sa valeur n'est ni affichée, ni journalisée, ni recopiée nulle part, et n'est
+# envoyée qu'à l'API OpenAI.
 #
-#   source ~/.config/boulangerie-pos/openai.env
+#   cp .env.example .env    puis y mettre la clé
 #   ./scripts/generer-images.sh                    # les quelques produits de démonstration
 #   ./scripts/generer-images.sh baguette croissant # des produits précis
 #
@@ -16,6 +17,15 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+
+# Chargement de .env s'il est là. `set -a` exporte automatiquement tout ce que
+# le fichier définit ; aucune valeur n'est affichée au passage.
+if [ -f .env ]; then
+	set -a
+	# shellcheck disable=SC1091
+	. ./.env
+	set +a
+fi
 
 # Volontairement un test explicite plutôt que ${VAR:?message} : dans cette
 # forme, bash interprète les quotes du message, et la moindre apostrophe

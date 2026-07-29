@@ -39,13 +39,44 @@ Aucun clavier ni souris : **tout doit être atteignable au doigt**.
 - **Une image manquante n'est jamais un trou.** Un produit sans illustration
   s'affiche exactement comme si la fonctionnalité n'existait pas.
 - **Jamais de clé d'API dans le dépôt ni dans le code.** Les scripts la lisent
-  depuis l'environnement.
+  depuis l'environnement. Voir « Secrets » plus bas.
 
 ## Simplicité
 
 Pas de framework front, pas d'étape de build, pas de `node_modules`.
 Du HTML/CSS/JS lu directement par Chromium, embarqué dans le binaire Go.
 Ce projet doit rester réparable dans deux ans par quelqu'un qui l'a oublié.
+
+## Secrets
+
+Les clés vivent dans `.env` à la racine. Ce fichier est ignoré par git et n'est
+jamais versionné — le dépôt est public. `.env.example` ne contient que des noms
+de variables et sert de modèle.
+
+Ce qui est normal et attendu :
+
+- écrire du code qui lit une clé **par son nom** (`os.environ["OPENAI_API_KEY"]`,
+  `$OPENAI_API_KEY`) ;
+- ajouter de nouveaux **noms** de variables à `.env.example` ;
+- lancer des commandes qui consomment ces variables (scripts, tests, serveur).
+
+Ce qui ne se fait pas :
+
+- afficher, journaliser ou recopier la **valeur** d'un secret — pas de `cat .env`,
+  pas de `echo $CLE` ;
+- écrire une valeur dans le code, un commentaire, un message de commit ou une
+  conversation ;
+- envoyer un secret ailleurs qu'à l'API à laquelle il appartient.
+
+Si une clé manque, dire **quel nom de variable** manque. Ne jamais demander que
+la valeur soit collée dans la conversation : elle s'y retrouverait en clair et
+serait à révoquer.
+
+Pour vérifier qu'une clé est chargée sans l'exposer :
+
+```bash
+[ -n "${OPENAI_API_KEY:-}" ] && echo "clé chargée (${#OPENAI_API_KEY} caractères)" || echo "absente"
+```
 
 ## Commandes
 

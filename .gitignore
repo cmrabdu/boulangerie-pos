@@ -4,7 +4,8 @@
 # Secrets : ce dépôt est public. Aucune clé ne doit pouvoir y atterrir.
 *.env
 .env*
-!data/exemple-catalogue.csv
+# …sauf le modèle, qui ne contient que des noms de variables et des exemples.
+!.env.example
 
 # Images générées : lourdes, et propres à chaque boulangerie. Les illustrations
 # SVG de démonstration, elles, sont versionnées : légères et lisibles en texte.
