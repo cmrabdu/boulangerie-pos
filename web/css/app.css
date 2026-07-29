@@ -1,0 +1,601 @@
+/* ==========================================================================
+   Caisse boulangerie — feuille de style unique.
+
+   Deux principes gouvernent tout ce fichier :
+
+   1. TOUT EST EN rem, ET rem SUIT LA HAUTEUR DE L'ÉCRAN.
+      La dalle de la caisse fait peut-être 1366×768, peut-être 1920×1080 : on
+      ne le sait pas encore. En faisant dépendre la taille de base de la hauteur
+      du viewport, l'interface entière se met à l'échelle sans média-queries et
+      sans jamais déborder.
+
+   2. ON N'ANIME QUE transform ET opacity.
+      Le processeur graphique du J1900 date de 2013. Ces deux propriétés sont
+      les seules qu'il compose sans repasser par le calcul de mise en page.
+      Aucune animation de couleur, d'ombre, de taille ou de flou.
+   ========================================================================== */
+
+:root {
+	/* Le nombre magique : 1vh = 1% de la hauteur d'écran. Les bornes évitent
+	   l'illisible sur très petit écran et le ridicule sur très grand. */
+	font-size: clamp(14px, 1.75vh, 22px);
+
+	/* Papier, encre, et une seule couleur d'accent. */
+	--bg:        #F2F0EB;
+	--surface:   #FFFFFF;
+	--surface-2: #FBFAF8;
+	--ink:       #1A1714;
+	--ink-2:     #6E655C;
+	--ink-3:     #A39A90;
+	--line:      rgba(26, 23, 20, 0.08);
+	--line-2:    rgba(26, 23, 20, 0.14);
+
+	--accent:    #C2410C;
+	--cash:      #15803D;
+	--card:      #1D4ED8;
+
+	/* Pastilles de catégorie : sourdes, jamais criardes. */
+	--c-wheat:  #C99A3B;
+	--c-butter: #D98324;
+	--c-berry:  #B4436C;
+	--c-herb:   #4B8B5A;
+	--c-water:  #3D7EA6;
+	--c-stone:  #8A8177;
+
+	--r-sm: 0.75rem;
+	--r-md: 1.15rem;
+	--r-lg: 1.75rem;
+
+	/* Ombres statiques uniquement — jamais animées. */
+	--shadow:    0 1px 2px rgba(26, 23, 20, 0.05), 0 4px 12px rgba(26, 23, 20, 0.05);
+	--shadow-lg: 0 2px 6px rgba(26, 23, 20, 0.07), 0 18px 44px rgba(26, 23, 20, 0.12);
+
+	/* La courbe iOS : part vite, se pose en douceur. C'est elle qui donne la
+	   sensation que « ça glisse », bien plus que la durée. */
+	--ease: cubic-bezier(0.22, 0.61, 0.20, 1);
+	--fast: 140ms;
+	--base: 210ms;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* L'attribut `hidden` doit toujours l'emporter : les règles `display: grid` et
+   `display: flex` posées plus bas sont plus spécifiques que la feuille de style
+   du navigateur et masqueraient sinon le masquage. */
+[hidden] { display: none !important; }
+
+html, body {
+	height: 100%;
+	margin: 0;
+	overflow: hidden;               /* une caisse ne défile jamais dans son ensemble */
+	overscroll-behavior: none;      /* pas d'effet élastique en bout de liste */
+}
+
+body {
+	background: var(--bg);
+	color: var(--ink);
+	font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter",
+	             "Segoe UI", system-ui, sans-serif;
+	font-size: 1rem;
+	line-height: 1.3;
+	-webkit-font-smoothing: antialiased;
+
+	/* Réglages tactiles : sans eux, l'interface « colle ». */
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+	touch-action: manipulation;     /* supprime le délai de 300 ms du double-tap */
+}
+
+button {
+	font: inherit;
+	color: inherit;
+	border: 0;
+	margin: 0;
+	background: none;
+	cursor: pointer;
+	touch-action: manipulation;
+}
+
+/* --------------------------------------------------------------------------
+   Ossature : boutique à gauche, ticket à droite.
+   -------------------------------------------------------------------------- */
+
+.app {
+	display: grid;
+	grid-template-columns: 1fr minmax(22rem, 28rem);
+	height: 100%;
+	gap: 1.25rem;
+	padding: 1.25rem;
+}
+
+.shop {
+	display: grid;
+	grid-template-rows: auto 1fr;
+	gap: 1.1rem;
+	min-height: 0;                  /* sans ça, la grille refuse de rétrécir */
+}
+
+/* --------------------------------------------------------------------------
+   Catégories
+   -------------------------------------------------------------------------- */
+
+.cats {
+	display: flex;
+	gap: 0.6rem;
+	overflow-x: auto;
+	scrollbar-width: none;
+	padding-bottom: 0.15rem;
+}
+.cats::-webkit-scrollbar { display: none; }
+
+.cat {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	min-height: 5.2rem;             /* ≈ 73 px en 768p, 98 px en 1080p */
+	padding: 0 1.6rem;
+	border-radius: var(--r-md);
+	background: var(--surface);
+	box-shadow: var(--shadow);
+	font-size: 1.15rem;
+	font-weight: 550;
+	letter-spacing: -0.01em;
+	color: var(--ink-2);
+	transition: transform var(--fast) var(--ease);
+}
+
+.cat-dot {
+	width: 0.7rem;
+	height: 0.7rem;
+	border-radius: 50%;
+	background: var(--dot, var(--ink-3));
+	flex: 0 0 auto;
+}
+
+.cat[aria-selected="true"] {
+	background: var(--ink);
+	color: #fff;
+	box-shadow: var(--shadow-lg);
+}
+
+/* --------------------------------------------------------------------------
+   Grille des produits
+   -------------------------------------------------------------------------- */
+
+.grid-wrap {
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-width: none;
+	-webkit-overflow-scrolling: touch;
+	margin: -0.4rem;                /* laisse respirer l'ombre des tuiles */
+	padding: 0.4rem;
+}
+.grid-wrap::-webkit-scrollbar { display: none; }
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+	gap: 0.9rem;
+	align-content: start;
+}
+
+.tile {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 0.7rem;
+	min-height: 8.8rem;             /* très au-delà des 100 px recommandés */
+	padding: 1.15rem 1.25rem;
+	border-radius: var(--r-md);
+	background: var(--surface);
+	box-shadow: var(--shadow);
+	text-align: left;
+	transition: transform var(--fast) var(--ease);
+	will-change: transform;
+}
+
+.tile-name {
+	font-size: 1.08rem;
+	font-weight: 550;
+	letter-spacing: -0.012em;
+	line-height: 1.22;
+	color: var(--ink);
+	/* Deux lignes maximum : au-delà, le nom est trop long pour une caisse. */
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.tile-price {
+	font-size: 1.02rem;
+	font-weight: 600;
+	color: var(--ink-3);
+	font-variant-numeric: tabular-nums;
+}
+
+/* Enfoncement au doigt. Appliqué dès le touchstart par le JS, donc perçu comme
+   instantané, et retiré au relâchement. */
+.tile.is-down, .cat.is-down, .pad-btn.is-down,
+.pay-btn.is-down, .qty-btn.is-down, .confirm.is-down {
+	transform: scale(0.962);
+}
+
+/* --------------------------------------------------------------------------
+   Ticket
+   -------------------------------------------------------------------------- */
+
+.ticket {
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	min-height: 0;
+	border-radius: var(--r-lg);
+	background: var(--surface);
+	box-shadow: var(--shadow);
+	overflow: hidden;
+}
+
+.ticket-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding: 1.2rem 1.35rem 0.85rem;
+	border-bottom: 1px solid var(--line);
+}
+
+.ticket-title {
+	margin: 0;
+	font-size: 0.82rem;
+	font-weight: 650;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--ink-3);
+}
+
+.clear {
+	padding: 0.5rem 0.85rem;
+	border-radius: var(--r-sm);
+	background: var(--surface-2);
+	font-size: 0.86rem;
+	font-weight: 550;
+	color: var(--ink-2);
+}
+.clear.is-armed { background: var(--accent); color: #fff; }
+
+.lines-wrap {
+	position: relative;
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-width: none;
+}
+.lines-wrap::-webkit-scrollbar { display: none; }
+
+.lines {
+	list-style: none;
+	margin: 0;
+	padding: 0.5rem 0.85rem;
+}
+
+.line {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	grid-template-areas: "name qty" "price qty";
+	align-items: center;
+	gap: 0.1rem 0.7rem;
+	padding: 0.7rem 0.5rem;
+	border-radius: var(--r-sm);
+}
+
+.line-name  { grid-area: name;  font-size: 1.02rem; font-weight: 550; letter-spacing: -0.01em; }
+.line-price { grid-area: price; font-size: 0.85rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+.line-qty {
+	grid-area: qty;
+	display: flex;
+	align-items: center;
+	gap: 0.15rem;
+}
+
+/* Pas de geste caché pour supprimer une ligne : des boutons visibles. « − » sur
+   une quantité de 1 retire l'article. */
+.qty-btn {
+	width: 3.1rem;
+	height: 3.1rem;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	background: var(--surface-2);
+	font-size: 1.3rem;
+	font-weight: 500;
+	color: var(--ink-2);
+	line-height: 1;
+	transition: transform var(--fast) var(--ease);
+}
+
+.qty-val {
+	min-width: 1.9rem;
+	text-align: center;
+	font-size: 1.05rem;
+	font-weight: 620;
+	font-variant-numeric: tabular-nums;
+}
+
+.empty {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-content: center;
+	margin: 0;
+	text-align: center;
+	font-size: 1rem;
+	line-height: 1.6;
+	color: var(--ink-3);
+	pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Total et boutons de paiement
+   -------------------------------------------------------------------------- */
+
+.ticket-foot {
+	padding: 1rem 1.1rem 1.1rem;
+	border-top: 1px solid var(--line);
+	background: var(--surface-2);
+}
+
+.total-row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding: 0 0.25rem 0.95rem;
+}
+
+.total-label {
+	font-size: 0.82rem;
+	font-weight: 650;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--ink-3);
+}
+
+/* L'élément le plus important de l'écran. Lisible à trois mètres. */
+.total {
+	font-size: 3.6rem;
+	font-weight: 660;
+	letter-spacing: -0.035em;
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+	will-change: transform;
+}
+
+.pay { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+
+.pay-btn {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.3rem;
+	min-height: 6.4rem;             /* le bouton le plus critique : le plus grand */
+	border-radius: var(--r-md);
+	color: #fff;
+	font-size: 1.06rem;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	transition: transform var(--fast) var(--ease), opacity var(--fast) linear;
+	will-change: transform;
+}
+
+.pay-ico { font-size: 1.25rem; opacity: 0.75; line-height: 1; }
+
+.pay-cash { background: var(--cash); }
+.pay-card { background: var(--card); }
+
+.pay-btn:disabled {
+	background: var(--surface);
+	color: var(--ink-3);
+	box-shadow: inset 0 0 0 1px var(--line-2);
+	cursor: default;
+}
+.pay-btn:disabled .pay-ico { opacity: 0.35; }
+
+/* --------------------------------------------------------------------------
+   Écran de paiement
+   -------------------------------------------------------------------------- */
+
+.pay-screen {
+	position: fixed;
+	inset: 0;
+	z-index: 20;
+	display: grid;
+	place-items: center;
+	padding: 1.5rem;
+	background: rgba(26, 23, 20, 0.4);
+}
+
+.pay-sheet {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: min(46rem, 100%);
+	max-height: 100%;
+	padding: 2.2rem;
+	border-radius: var(--r-lg);
+	background: var(--surface);
+	box-shadow: var(--shadow-lg);
+	will-change: transform;
+}
+
+.back {
+	position: absolute;
+	top: 1.5rem;
+	left: 1.5rem;
+	padding: 0.65rem 1.1rem;
+	border-radius: var(--r-sm);
+	background: var(--surface-2);
+	font-size: 0.95rem;
+	font-weight: 550;
+	color: var(--ink-2);
+}
+
+.due {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 1.9rem 0 1.6rem;
+}
+
+.due-label {
+	font-size: 0.85rem;
+	font-weight: 650;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--ink-3);
+}
+
+.due-amount {
+	font-size: 4.6rem;
+	font-weight: 660;
+	letter-spacing: -0.04em;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
+
+.due-note { font-size: 0.92rem; color: var(--ink-3); }
+
+.pad-title {
+	margin: 0 0 0.8rem;
+	text-align: center;
+	font-size: 0.85rem;
+	font-weight: 650;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--ink-3);
+}
+
+.pad {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+	gap: 0.7rem;
+}
+
+.pad-btn {
+	min-height: 4.6rem;
+	border-radius: var(--r-md);
+	background: var(--surface-2);
+	box-shadow: inset 0 0 0 1px var(--line);
+	font-size: 1.3rem;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	font-variant-numeric: tabular-nums;
+	transition: transform var(--fast) var(--ease);
+}
+
+.pad-btn.is-exact { background: var(--ink); color: #fff; box-shadow: none; }
+
+.change {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	margin-top: 1.2rem;
+	padding: 1.15rem 1.4rem;
+	border-radius: var(--r-md);
+	background: #F0FAF3;
+	box-shadow: inset 0 0 0 1px rgba(21, 128, 61, 0.16);
+}
+
+.change-label {
+	font-size: 0.85rem;
+	font-weight: 650;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--cash);
+}
+
+.change-amount {
+	font-size: 2.5rem;
+	font-weight: 660;
+	letter-spacing: -0.03em;
+	line-height: 1;
+	color: var(--cash);
+	font-variant-numeric: tabular-nums;
+}
+
+.card-wait { padding: 1rem 0 0.5rem; }
+
+.card-msg {
+	margin: 0;
+	text-align: center;
+	font-size: 1.15rem;
+	line-height: 1.5;
+	color: var(--ink-2);
+}
+
+.confirm {
+	margin-top: 1.6rem;
+	min-height: 5.4rem;
+	border-radius: var(--r-md);
+	background: var(--ink);
+	color: #fff;
+	font-size: 1.25rem;
+	font-weight: 620;
+	letter-spacing: -0.01em;
+	transition: transform var(--fast) var(--ease);
+	will-change: transform;
+}
+
+/* --------------------------------------------------------------------------
+   Confirmation de fin de vente
+   -------------------------------------------------------------------------- */
+
+.done {
+	position: fixed;
+	inset: 0;
+	z-index: 30;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1.4rem;
+	background: rgba(242, 240, 235, 0.94);
+}
+
+.check { width: 8rem; height: 8rem; }
+
+.check-circle, .check-mark {
+	fill: none;
+	stroke: var(--cash);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.check-circle { stroke-width: 2.5; stroke-dasharray: 152; stroke-dashoffset: 152; }
+.check-mark   { stroke-width: 3.5; stroke-dasharray: 40;  stroke-dashoffset: 40; }
+
+.done-text {
+	margin: 0;
+	font-size: 1.5rem;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	color: var(--ink-2);
+	font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   Respect des préférences système : si l'utilisateur a demandé moins
+   d'animations, on les supprime au lieu de les imposer.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+	}
+}
