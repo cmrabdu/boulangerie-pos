@@ -128,3 +128,23 @@ Les commentaires expliquent **pourquoi**, pas **quoi**.
 ## Git
 
 Commits en français, à l'identité du dépôt. **Ne pas ajouter de co-auteur.**
+
+## Icônes de catégories — arrêté le 29/07
+
+**Silhouette pleine, monochrome.** Formes massives, aucun trait fin, détails
+obtenus par découpes en négatif. Choisi après comparaison de trois styles dans
+la vraie barre d'onglets.
+
+Elles doivent rester **monochromes** : c'est ce qui permet à
+`filter: brightness(0) invert(1)` de les repeindre en blanc pur sur l'onglet
+actif, dont le fond est noir. Une icône bicolore y fusionne en une tache.
+
+Pour en régénérer un jeu :
+
+```bash
+./scripts/generer-planche-icones.sh plein
+```
+
+Toujours **une planche de six d'un seul tenant**, jamais six appels séparés :
+demandées une par une, les icônes n'ont aucune raison de partager la même
+graisse ni le même niveau de détail, et le jeu paraît dépareillé.
