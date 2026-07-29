@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
 #
-# Génère les icônes de catégories et de paiement.
+# Génère les icônes de catégories.
 #
-#   ./scripts/generer-icones.sh                  # style « trait »
+#   ./scripts/generer-icones.sh                 # vers img/icons/, style « trait »
 #   ./scripts/generer-icones.sh --style plein
+#   ./scripts/generer-icones.sh --dest img/essais/icones-test
+#   ./scripts/generer-icones.sh pain croissant  # seulement celles-là
 #
-# Sortie : img/essais/icones-<style>/<cle>.png
+# Les icônes de PAIEMENT ne sont pas ici : elles sont dessinées à la main dans
+# web/index.html, parce qu'elles doivent virer au blanc sur un fond saturé.
 #
-# Réserve : une icône matricielle affichée à 24 px perd forcément en netteté
-# face à un tracé vectoriel, et deux images générées séparément n'ont aucune
-# raison d'avoir la même graisse de trait ni le même équilibre. Ce script sert
-# à en juger sur pièce, pas à présumer du résultat.
+# Après génération, chaque icône est RECADRÉE sur son dessin puis recentrée
+# dans un carré. Sans cette étape, le modèle laisse une marge transparente
+# arbitraire — mesurée à un tiers de la hauteur sur le premier lot — et les
+# icônes paraissent petites et de tailles inégales alors que leurs boîtes CSS
+# font toutes la même taille.
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -28,75 +32,142 @@ if [ -z "${OPENAI_API_KEY:-}" ]; then
 fi
 
 command -v jq >/dev/null || { echo "jq est requis : brew install jq" >&2; exit 1; }
+command -v uv >/dev/null || { echo "uv est requis pour le recadrage : brew install uv" >&2; exit 1; }
 
 MODELE="${MODELE:-gpt-image-1.5}"
 QUALITE="${QUALITE:-low}"
 
 STYLE="trait"
-[ "${1:-}" = "--style" ] && { STYLE="$2"; shift 2; }
+DEST="img/icons"
+CIBLES=()
 
-DEST="img/essais/icones-$STYLE"
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--style) STYLE="$2"; shift 2 ;;
+		--dest)  DEST="$2";  shift 2 ;;
+		-*) echo "Option inconnue : $1" >&2; exit 1 ;;
+		*)  CIBLES+=("$1"); shift ;;
+	esac
+done
+
 mkdir -p "$DEST"
 
-COMMUN="Pictogramme d'interface, sujet unique parfaitement centré, cadrage carré avec \
-marge égale sur les quatre côtés, fond entièrement transparent. Aucun texte, aucun cadre, \
-aucun cercle autour, aucune ombre portée, aucun dégradé, aucun reflet."
+# --------------------------------------------------------------------------
+# Consignes
+#
+# Une icône de caisse est vue à un mètre, du coin de l'œil, pendant qu'on rend
+# la monnaie. Tout ce qui demande à être déchiffré est du poids mort. D'où
+# l'insistance, répétée trois fois, sur l'épaisseur du trait et le nombre de
+# formes : le modèle a une tendance naturelle à ajouter du détail décoratif.
+# --------------------------------------------------------------------------
+
+COMMUN="Le dessin remplit tout le cadre, en le touchant presque, avec une marge minimale. \
+Sujet unique et centré. Fond entièrement transparent. Aucun texte, aucun cadre, aucun cercle \
+autour, aucune ombre, aucun dégradé, aucun reflet, aucun détail décoratif."
 
 prompt_trait() {
-	echo "Icône au trait de $1. Contour uniquement, trait d'épaisseur constante et \
-généreuse, extrémités arrondies, aucune surface remplie, une seule couleur brun foncé sur \
-fond transparent, géométrie simplifiée à l'essentiel, style pictogramme d'application \
-moderne lisible à 24 pixels. $COMMUN"
+	echo "Icône d'interface extrêmement simplifiée représentant $1. \
+TRAIT TRÈS ÉPAIS ET UNIFORME, comme tracé au marqueur large : l'épaisseur du trait doit valoir \
+environ un dixième de la largeur de l'image. Extrémités arrondies. TROIS FORMES MAXIMUM, \
+aucun détail intérieur, aucune texture, aucune hachure. Contour seul, sans remplissage. \
+Une seule couleur brun très foncé. Lisibilité absolue à 24 pixels. $COMMUN"
 }
 
 prompt_plein() {
-	echo "Icône en aplat de $1. Silhouette pleine simplifiée, deux ou trois couleurs \
-chaudes maximum (ambre, brun doré, brun foncé), aucun contour noir, formes arrondies et \
-généreuses, style pictogramme d'application moderne lisible à 24 pixels. $COMMUN"
+	echo "Icône d'interface extrêmement simplifiée représentant $1. \
+SILHOUETTE PLEINE ET COMPACTE, formes larges et arrondies, aucun trait fin nulle part. \
+TROIS FORMES MAXIMUM, aucun détail intérieur. Une seule couleur brun très foncé, aplat uni. \
+Lisibilité absolue à 24 pixels. $COMMUN"
 }
 
 ICONES=(
-	"pain|une miche de pain et une baguette"
-	"croissant|un croissant vu de face, réduit à une forme de croissant de lune aux pointes effilées"
-	"patisserie|un cupcake vu de face, réduit à une caissette cannelée surmontée d'un dôme de crème"
-	"sandwich|un sandwich garni coupé en deux"
-	"boisson|un gobelet de boisson chaude à emporter"
-	"divers|un sac en papier de boulangerie"
-	"cash|des billets de banque et des pièces de monnaie"
-	"carte|une carte bancaire glissée dans un terminal de paiement"
+	"pain|une miche de pain ronde vue de face"
+	# Un croissant réduit à sa seule silhouette arquée se lit « lune ». Les deux
+	# séparations sont le minimum qui le rende reconnaissable comme viennoiserie.
+	"croissant|un croissant de boulangerie vu de face, forme arquée épaisse aux pointes effilées, avec deux séparations franches marquant les segments"
+	"patisserie|un cupcake, réduit à une caissette trapézoïdale surmontée d'un dôme"
+	"sandwich|un sandwich triangulaire vu de face, deux tranches de pain et une garniture"
+	"boisson|un gobelet de boisson à emporter, vu de face, avec son couvercle"
+	"divers|un sac en papier vu de face, avec ses deux anses"
 )
+
+if [ ${#CIBLES[@]} -gt 0 ]; then
+	SELECTION=()
+	for e in "${ICONES[@]}"; do
+		for v in "${CIBLES[@]}"; do [ "${e%%|*}" = "$v" ] && SELECTION+=("$e"); done
+	done
+	[ ${#SELECTION[@]} -eq 0 ] && { echo "Aucune icône connue parmi : ${CIBLES[*]}" >&2; exit 1; }
+	ICONES=("${SELECTION[@]}")
+fi
+
+appeler_api() {
+	jq -n --arg p "$1" --arg m "$MODELE" --arg q "$QUALITE" \
+		'{model:$m, prompt:$p, n:1, size:"1024x1024", quality:$q,
+		  background:"transparent", output_format:"png"}' \
+		| curl -sS --http1.1 --max-time 300 \
+			https://api.openai.com/v1/images/generations \
+			-H "Authorization: Bearer $OPENAI_API_KEY" \
+			-H "Content-Type: application/json" \
+			--data-binary @- || true
+}
 
 echo "→ ${#ICONES[@]} icône(s), style « $STYLE », modèle $MODELE → $DEST/"
 echo
 
+ECHECS=()
+
 for entree in "${ICONES[@]}"; do
 	cle="${entree%%|*}"
 	sujet="${entree#*|}"
-	sortie="$DEST/$cle.png"
+	brut="$DEST/$cle.png"
 
-	[ -f "$sortie" ] && { echo "  = $cle (déjà là)"; continue; }
+	if [ -f "$brut" ] || [ -f "$DEST/$cle.webp" ]; then
+		echo "  = $cle (déjà là)"
+		continue
+	fi
 
 	prompt=$("prompt_$STYLE" "$sujet")
 	printf '  · %-12s ' "$cle"
 
-	reponse=$(jq -n --arg p "$prompt" --arg m "$MODELE" --arg q "$QUALITE" \
-		'{model:$m, prompt:$p, n:1, size:"1024x1024", quality:$q,
-		  background:"transparent", output_format:"png"}' \
-		| curl -sS https://api.openai.com/v1/images/generations \
-			-H "Authorization: Bearer $OPENAI_API_KEY" \
-			-H "Content-Type: application/json" \
-			--data-binary @-)
+	b64=""
+	for tentative in 1 2 3; do
+		reponse=$(appeler_api "$prompt")
+		if b64=$(printf '%s' "$reponse" | jq -er '.data[0].b64_json' 2>/dev/null); then break; fi
+		b64=""
+		[ "$tentative" -lt 3 ] && { printf '↻'; sleep 3; }
+	done
 
-	if ! b64=$(printf '%s' "$reponse" | jq -er '.data[0].b64_json' 2>/dev/null); then
-		echo "échec"
-			printf '%s' "$reponse" | jq -r '.error.message // "réponse inattendue"' >&2 || echo "réponse illisible de l'API" >&2
+	if [ -z "$b64" ]; then
+		echo " échec"
+		printf '%s' "$reponse" | jq -r '.error.message // empty' 2>/dev/null >&2 || true
+		ECHECS+=("$cle")
 		continue
 	fi
 
-	printf '%s' "$b64" | base64 --decode > "$sortie"
-	command -v sips >/dev/null && sips -Z 128 "$sortie" >/dev/null 2>&1 || true
-	echo "ok ($(du -h "$sortie" | awk '{print $1}'))"
+	printf '%s' "$b64" | base64 --decode > "$brut"
+	echo "ok"
 done
 
+# --------------------------------------------------------------------------
+# Recadrage : chaque icône est ramenée à la même emprise visuelle.
+# --------------------------------------------------------------------------
+
 echo
-echo "Terminé."
+echo "Recadrage et normalisation…"
+
+uv run --quiet --with pillow python scripts/normaliser-icones.py "$DEST"
+
+# WebP : quelques kilo-octets par icône, transparence conservée.
+if command -v cwebp >/dev/null; then
+	for f in "$DEST"/*.png; do
+		[ -e "$f" ] || continue
+		cwebp -quiet -q 90 -alpha_q 100 "$f" -o "${f%.png}.webp" && rm -f "$f"
+	done
+fi
+
+echo
+if [ ${#ECHECS[@]} -gt 0 ]; then
+	echo "Terminé, avec ${#ECHECS[@]} échec(s) : ${ECHECS[*]}"
+else
+	echo "Terminé."
+fi

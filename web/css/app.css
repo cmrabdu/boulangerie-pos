@@ -152,8 +152,8 @@ button {
 /* Icônes de catégories. Le texte reste affiché à côté — on s'habitue mieux à un
    mot qu'à un pictogramme, l'icône ne fait qu'accélérer la reconnaissance. */
 .cat-ico {
-	width: 1.9rem;
-	height: 1.9rem;
+	width: 2.5rem;
+	height: 2.5rem;
 	flex: 0 0 auto;
 	object-fit: contain;
 }
