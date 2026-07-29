@@ -32,6 +32,14 @@ type Product struct {
 	Name       string `json:"name"`
 	PriceCents int    `json:"priceCents"`
 	Position   int    `json:"position"`
+
+	// Slug est le nom de fichier attendu pour l'image du produit :
+	// « Éclair chocolat » → « eclair-chocolat ». Calculé, jamais stocké.
+	Slug string `json:"slug"`
+	// Image est l'URL de l'illustration si un fichier correspondant existe sur
+	// le disque, sinon vide. Renseignée par la couche API, qui seule connaît le
+	// dossier d'images.
+	Image string `json:"image"`
 }
 
 // SaleLine est une ligne du ticket au moment de la vente. Le nom et le prix
@@ -160,6 +168,7 @@ func (d *DB) Catalog() ([]Category, error) {
 		if err := prodRows.Scan(&p.ID, &p.CategoryID, &p.Name, &p.PriceCents, &p.Position); err != nil {
 			return nil, err
 		}
+		p.Slug = Slugify(p.Name)
 		if idx, ok := byID[p.CategoryID]; ok {
 			cats[idx].Products = append(cats[idx].Products, p)
 		}

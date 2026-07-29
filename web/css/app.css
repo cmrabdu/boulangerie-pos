@@ -146,13 +146,26 @@ button {
 	transition: transform var(--fast) var(--ease);
 }
 
-.cat-dot {
-	width: 0.7rem;
-	height: 0.7rem;
-	border-radius: 50%;
-	background: var(--dot, var(--ink-3));
+/* Le jeu d'icônes lui-même ne s'affiche jamais : seules ses copies via <use>. */
+.sprite { display: none; }
+
+/* Icônes dessinées au trait : elles restent nettes à toute taille et prennent
+   la couleur de la catégorie. Le texte reste à côté — on s'habitue mieux à un
+   mot qu'à un pictogramme, l'icône ne fait qu'accélérer la reconnaissance. */
+.cat-ico {
+	width: 1.65rem;
+	height: 1.65rem;
 	flex: 0 0 auto;
+	fill: none;
+	stroke: var(--dot, var(--ink-3));
+	stroke-width: 1.6;
+	stroke-linecap: round;
+	stroke-linejoin: round;
 }
+
+/* Sur l'onglet actif (fond sombre), l'icône passe en blanc : une couleur
+   sourde sur fond noir serait illisible. */
+.cat[aria-selected="true"] .cat-ico { stroke: #fff; }
 
 .cat[aria-selected="true"] {
 	background: var(--ink);
@@ -183,6 +196,7 @@ button {
 }
 
 .tile {
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
@@ -194,9 +208,53 @@ button {
 	background: var(--surface);
 	box-shadow: var(--shadow);
 	text-align: left;
+	overflow: hidden;
 	transition: transform var(--fast) var(--ease);
 	will-change: transform;
 }
+
+/* --- Image du produit ---------------------------------------------------
+   L'image se loge DANS la tuile existante, qui ne grandit pas d'un pixel :
+   elle occupe la moitié droite, débordant légèrement du bord, pendant que le
+   nom et le prix gardent la gauche. Un dégradé de la couleur de la carte passe
+   par-dessus l'image côté texte, si bien que la lisibilité ne dépend jamais de
+   ce que contient l'image.
+   Une tuile sans image reste exactement telle qu'avant.
+   ------------------------------------------------------------------------ */
+
+.tile-img {
+	position: absolute;
+	right: -0.7rem;
+	bottom: -0.5rem;
+	width: 66%;
+	height: 104%;
+	object-fit: contain;
+	object-position: right bottom;
+	z-index: 0;
+	pointer-events: none;
+	/* Le bord gauche de l'image s'efface : aucune arête franche ne vient
+	   couper la carte en deux. */
+	-webkit-mask-image: linear-gradient(to right, transparent, #000 30%);
+	mask-image: linear-gradient(to right, transparent, #000 30%);
+}
+
+.tile.has-img::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+	background: linear-gradient(100deg,
+		var(--surface) 30%,
+		rgba(255, 255, 255, 0.5) 55%,
+		rgba(255, 255, 255, 0) 78%);
+}
+
+.tile > .tile-name, .tile > .tile-price { position: relative; z-index: 2; }
+
+/* Avec une image, le texte se contente de la gauche de la carte. */
+.tile.has-img > .tile-name  { max-width: 64%; }
+.tile.has-img > .tile-price { max-width: 64%; }
 
 .tile-name {
 	font-size: 1.08rem;

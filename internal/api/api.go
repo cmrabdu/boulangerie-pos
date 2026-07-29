@@ -10,7 +10,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"slices"
 	"strconv"
+	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/cmrabdu/boulangerie-pos/internal/db"
@@ -18,13 +23,72 @@ import (
 
 type Server struct {
 	DB *db.DB
+	// ImgDir est le dossier d'illustrations, sur le disque et non embarqué :
+	// ajouter une image à la caisse doit se résumer à y déposer un fichier,
+	// sans recompiler quoi que ce soit.
+	ImgDir string
+
+	// generation change à chaque réimport du catalogue. Le front l'interroge
+	// pour se rafraîchir tout seul après un dépôt de CSV par SSH.
+	generation atomic.Int64
 }
+
+// BumpGeneration signale que le catalogue a changé.
+func (s *Server) BumpGeneration() { s.generation.Add(1) }
 
 // Routes enregistre les points d'entrée de l'API sur un mux.
 func (s *Server) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/catalog", s.getCatalog)
+	mux.HandleFunc("GET /api/catalog/version", s.getCatalogVersion)
 	mux.HandleFunc("POST /api/sales", s.postSale)
 	mux.HandleFunc("GET /api/sales/export.csv", s.exportSales)
+}
+
+// extensionsImage est l'ordre de préférence quand plusieurs fichiers portent le
+// même slug. Le PNG passe en premier : c'est ce que produit le script de
+// génération. Le SVG ferme la marche, si bien qu'une vraie image déposée par la
+// boulangerie remplace d'elle-même l'illustration de démonstration.
+var extensionsImage = []string{".png", ".webp", ".jpg", ".jpeg", ".svg"}
+
+// imagesDisponibles indexe le dossier d'illustrations par slug.
+//
+// Le dossier est relu à chaque appel du catalogue plutôt que mis en cache :
+// il contient quelques dizaines de fichiers, l'appel est rare, et cela évite
+// d'avoir à redémarrer la caisse après avoir copié une image.
+func (s *Server) imagesDisponibles() map[string]string {
+	found := map[string]string{}
+	if s.ImgDir == "" {
+		return found
+	}
+	entries, err := os.ReadDir(filepath.Join(s.ImgDir, "products"))
+	if err != nil {
+		return found // dossier absent : aucune image, ce n'est pas une erreur
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		ext := strings.ToLower(filepath.Ext(name))
+		slug := strings.TrimSuffix(name, filepath.Ext(name))
+
+		rank := slices.Index(extensionsImage, ext)
+		if rank < 0 {
+			continue
+		}
+		// À slug égal, on garde l'extension la mieux classée.
+		if prev, ok := found[slug]; ok {
+			if slices.Index(extensionsImage, strings.ToLower(filepath.Ext(prev))) <= rank {
+				continue
+			}
+		}
+		found[slug] = name
+	}
+	return found
+}
+
+func (s *Server) getCatalogVersion(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]int64{"version": s.generation.Load()})
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
@@ -49,6 +113,16 @@ func (s *Server) getCatalog(w http.ResponseWriter, r *http.Request) {
 	if cats == nil {
 		cats = []db.Category{}
 	}
+
+	images := s.imagesDisponibles()
+	for ci := range cats {
+		for pi := range cats[ci].Products {
+			if file, ok := images[cats[ci].Products[pi].Slug]; ok {
+				cats[ci].Products[pi].Image = "/img/products/" + file
+			}
+		}
+	}
+
 	writeJSON(w, http.StatusOK, cats)
 }
 

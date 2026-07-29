@@ -68,7 +68,9 @@ Statuts : ⬜ à faire · 🟡 en cours · ✅ terminé et vérifié
 - [x] 5.4 Bancontact : affichage du montant, encodage manuel sur le terminal
 - [x] 5.5 Arrondi belge aux 5 centimes sur les espèces, **affiché explicitement**
       (constante `ARRONDI_CASH_5_CENTIMES` — voir §Questions ouvertes)
-- [x] 5.6 Confirmation animée puis retour à zéro
+- [x] 5.6 Confirmation animée puis retour à zéro — la feuille de paiement se
+      retire pendant que la coche monte, avec un léger dépassement d'échelle
+- [x] 5.9 Coupures proposées jusqu'au billet de 100 €
 - [x] 5.7 Une vente qui échoue à s'enregistrer conserve le ticket à l'écran
 - [x] 5.8 Vérifié de bout en bout : 5,00 € sur 4,40 € dus → 0,60 € rendus,
       vente écrite en base et retrouvée dans l'export CSV
@@ -81,12 +83,35 @@ Statuts : ⬜ à faire · 🟡 en cours · ✅ terminé et vérifié
 - [x] 6.3 `GET /api/sales/export.csv` — point-virgule, virgule décimale, BOM,
       donc ouvrable directement dans Excel
 
-### Phase 7 — Édition du catalogue ⬜
+### Phase 7 — Mise à jour du catalogue ✅
 
-- [ ] 7.1 Accès caché : appui long dans un coin + code à 4 chiffres
-- [ ] 7.2 Créer / renommer / changer le prix / archiver un produit
-- [ ] 7.3 Réordonner produits et catégories
-- [ ] 7.4 Import CSV depuis l'interface, sans ligne de commande
+> **Décision du 29/07** : pas d'écran de paramètres, pas de bouton caché, pas de
+> code à 4 chiffres. Le catalogue se met à jour en déposant un CSV par SSH.
+> Tout ce qui ne sert pas à encaisser n'a rien à faire devant quelqu'un qui
+> sert des clients.
+
+- [x] 7.1 Surveillance de `catalogue.csv`, réimport automatique en ~3 s
+- [x] 7.2 Endpoint `/api/catalog/version` et rafraîchissement silencieux
+- [x] 7.3 Jamais de rafraîchissement pendant une vente (panier non vide ou
+      écran de paiement ouvert)
+- [x] 7.4 Un CSV illisible est refusé, l'ancien catalogue reste en place
+- [x] 7.5 Au premier démarrage, un CSV déjà présent l'emporte sur le catalogue
+      de démonstration
+- [x] 7.6 Vérifié : dépôt d'un CSV → prix passés de 1,30 à 1,35 et catégories
+      de 6 à 3 à l'écran, sans redémarrage, en restant sur l'onglet ouvert
+
+### Phase 7 bis — Images et icônes ✅
+
+- [x] 7b.1 Slug calculé côté serveur : « Éclair chocolat » → `eclair-chocolat`
+- [x] 7b.2 Dossier `img/` servi depuis le disque, hors de l'exécutable :
+      ajouter une image ne demande aucune recompilation
+- [x] 7b.3 Image dans la carte **sans l'agrandir** : moitié droite, débordement
+      léger, dégradé de la couleur de la carte au-dessus côté texte
+- [x] 7b.4 Un produit sans image s'affiche exactement comme avant
+- [x] 7b.5 Icônes de catégories dessinées au trait, en ligne dans la page,
+      déduites du nom de la catégorie par mots-clés — le texte reste affiché
+- [x] 7b.6 Six illustrations SVG de démonstration
+- [x] 7b.7 Script de génération lisant la clé depuis l'environnement
 
 ### Phase 8 — Durcissement ⬜
 
@@ -138,6 +163,15 @@ Statuts : ⬜ à faire · 🟡 en cours · ✅ terminé et vérifié
 ---
 
 ## Journal
+
+- **2026-07-29** — Écran validé par le user sur tablette. Ajouts : images des
+  produits en fond de carte sans agrandir les cartes, icônes de catégories,
+  billet de 100 €, enchaînement revu de l'encaissement, mise à jour du
+  catalogue par dépôt de CSV.
+- **2026-07-29** — Trois bugs corrigés à la relecture : un bouton restait
+  enfoncé si le doigt glissait hors de la cible avant de se lever ; le fondu de
+  sortie de la confirmation clignotait faute de `fill: 'forwards'` ; les tuiles
+  n'avaient pas de nom accessible.
 
 - **2026-07-29** — Phases 0 à 3, 5 et 6 terminées. Interface complète et
   fonctionnelle avec le catalogue de démonstration : composition du panier,

@@ -35,6 +35,8 @@ func main() {
 		dbPath  = flag.String("db", "caisse.db", "chemin du fichier de base de données")
 		csvPath = flag.String("import", "", "importer un catalogue CSV (catégorie;produit;prix) puis quitter")
 		dev     = flag.Bool("dev", false, "servir web/ depuis le disque : une retouche du CSS ne demande qu'un rechargement de page")
+		imgDir  = flag.String("img", "img", "dossier des illustrations de produits (img/products/<slug>.png)")
+		watch   = flag.String("catalogue", "", "fichier CSV surveillé : la caisse se met à jour dès qu'il change, sans redémarrage")
 	)
 	flag.Parse()
 
@@ -59,11 +61,11 @@ func main() {
 		return
 	}
 
-	if err := seedIfEmpty(database); err != nil {
+	if err := seedIfEmpty(database, *watch); err != nil {
 		log.Fatalf("catalogue initial : %v", err)
 	}
 
-	if err := serve(database, *addr, *lan, *dev); err != nil {
+	if err := serve(database, *addr, *lan, *dev, *imgDir, *watch); err != nil {
 		log.Fatalf("serveur : %v", err)
 	}
 }
@@ -91,18 +93,74 @@ func importCSV(database *db.DB, path string) error {
 	return nil
 }
 
-// seedIfEmpty charge le catalogue de démonstration au tout premier lancement,
-// pour que l'écran ne soit jamais vide au démarrage.
-func seedIfEmpty(database *db.DB) error {
+// surveillerCatalogue réimporte le CSV dès qu'il change sur le disque.
+//
+// C'est la façon dont la boulangerie met son catalogue à jour : on dépose le
+// fichier par SSH, la caisse le prend en compte en quelques secondes. Aucun
+// bouton « paramètres » n'apparaît donc à l'écran — tout ce qui ne sert pas à
+// encaisser n'a rien à y faire.
+//
+// Un sondage toutes les trois secondes plutôt qu'une surveillance du système de
+// fichiers : c'est trois appels stat par minute, et cela fonctionne aussi bien
+// avec un fichier remplacé par scp qu'avec un fichier modifié sur place.
+func surveillerCatalogue(database *db.DB, srv *api.Server, path string) {
+	var derniere time.Time
+	var taille int64
+
+	if fi, err := os.Stat(path); err == nil {
+		derniere, taille = fi.ModTime(), fi.Size()
+		log.Printf("catalogue surveillé : %s", path)
+	} else {
+		log.Printf("catalogue surveillé : %s (absent pour l'instant)", path)
+	}
+
+	for range time.Tick(3 * time.Second) {
+		fi, err := os.Stat(path)
+		if err != nil {
+			continue
+		}
+		if fi.ModTime().Equal(derniere) && fi.Size() == taille {
+			continue
+		}
+		derniere, taille = fi.ModTime(), fi.Size()
+
+		if err := importCSV(database, path); err != nil {
+			// Un CSV mal formé ne doit pas casser la caisse : on garde le
+			// catalogue précédent et on le signale dans le journal.
+			log.Printf("catalogue ignoré (%v) — l'ancien reste en place", err)
+			continue
+		}
+		srv.BumpGeneration()
+	}
+}
+
+// seedIfEmpty remplit le catalogue au tout premier lancement, pour que l'écran
+// ne soit jamais vide au démarrage.
+//
+// Le CSV surveillé l'emporte s'il est déjà là : sur une caisse fraîchement
+// installée, on copie le catalogue de la boulangerie puis on démarre, et il
+// serait absurde d'afficher d'abord des produits inventés.
+func seedIfEmpty(database *db.DB, watchPath string) error {
 	empty, err := database.IsEmpty()
 	if err != nil || !empty {
 		return err
 	}
+
+	if watchPath != "" {
+		if _, err := os.Stat(watchPath); err == nil {
+			log.Printf("base vide : import de %s", watchPath)
+			if err := importCSV(database, watchPath); err == nil {
+				return nil
+			}
+			log.Print("ce catalogue est illisible, chargement du catalogue de démonstration")
+		}
+	}
+
 	log.Print("base vide : chargement du catalogue de démonstration")
 	return database.ReplaceCatalog(db.DemoCatalog())
 }
 
-func serve(database *db.DB, addr string, lan, dev bool) error {
+func serve(database *db.DB, addr string, lan, dev bool, imgDir, watchPath string) error {
 	var static fs.FS
 	if dev {
 		log.Print("mode développement : le front est lu depuis ./web")
@@ -116,9 +174,19 @@ func serve(database *db.DB, addr string, lan, dev bool) error {
 	}
 
 	mux := http.NewServeMux()
-	srv := &api.Server{DB: database}
+	srv := &api.Server{DB: database, ImgDir: imgDir}
 	srv.Routes(mux)
+
+	// Les illustrations viennent du disque, jamais de l'exécutable : en ajouter
+	// une sur la caisse doit se résumer à copier un fichier par SSH.
+	mux.Handle("GET /img/", http.StripPrefix("/img/",
+		http.FileServer(http.Dir(imgDir))))
+
 	mux.Handle("GET /", noCache(http.FileServer(http.FS(static))))
+
+	if watchPath != "" {
+		go surveillerCatalogue(database, srv, watchPath)
+	}
 
 	httpSrv := &http.Server{
 		Handler:           mux,

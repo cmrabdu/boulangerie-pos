@@ -63,6 +63,9 @@ const dom = {
 	change: el('change'), changeAmount: el('change-amount'),
 	cardWait: el('card-wait'), confirm: el('confirm'),
 	done: el('done'), doneText: el('done-text'),
+	check: document.querySelector('.check'),
+	checkCircle: document.querySelector('.check-circle'),
+	checkMark: document.querySelector('.check-mark'),
 };
 
 /* --------------------------------------------------------------------------
@@ -107,28 +110,30 @@ document.addEventListener('pointerdown', (e) => {
 	if (t) t.classList.add('is-down');
 }, { passive: true });
 
-const release = (e) => {
-	const t = e.target.closest?.(PRESSABLE);
-	if (t) t.classList.remove('is-down');
-	// Filet de sécurité : un pointeur perdu (doigt glissé hors de l'écran)
-	// laisserait sinon un bouton enfoncé pour toujours.
-	if (e.type === 'pointercancel') {
-		document.querySelectorAll('.is-down').forEach((n) => n.classList.remove('is-down'));
-	}
+/* On relâche TOUT, pas seulement l'élément sous le doigt : si le doigt glisse
+   hors de la tuile avant de se lever, le relâchement ne vise plus la tuile
+   pressée, qui resterait enfoncée indéfiniment. */
+const release = () => {
+	document.querySelectorAll('.is-down').forEach((n) => n.classList.remove('is-down'));
 };
 document.addEventListener('pointerup', release, { passive: true });
 document.addEventListener('pointercancel', release, { passive: true });
 document.addEventListener('pointerleave', release, { passive: true });
 
 /** Animation courte et interruptible : la précédente est remplacée, jamais mise
- *  en file d'attente. */
-function animate(node, keyframes, duration = 200) {
-	if (!node) return;
+ *  en file d'attente.
+ *
+ *  `fill: 'forwards'` est indispensable pour les disparitions : sans lui,
+ *  l'élément revient brutalement à son opacité de départ à la dernière image,
+ *  ce qui produit un clignotement juste avant qu'on le masque. */
+function animate(node, keyframes, duration = 200, opts = {}) {
+	if (!node) return null;
 	node.getAnimations().forEach((a) => a.cancel());
-	node.animate(keyframes, {
+	return node.animate(keyframes, {
 		duration,
-		easing: 'cubic-bezier(0.22, 0.61, 0.20, 1)',
-		fill: 'none',
+		easing: opts.easing || 'cubic-bezier(0.22, 0.61, 0.20, 1)',
+		fill: opts.fill || 'none',
+		delay: opts.delay || 0,
 	});
 }
 
@@ -148,21 +153,86 @@ async function loadCatalog() {
 		return;
 	}
 	if (state.catalog.length === 0) return;
-	state.activeCatId = state.catalog[0].id;
+
+	// Après un rechargement du catalogue, on reste sur la même catégorie si
+	// elle existe encore : les identifiants changent à chaque import, pas les
+	// noms.
+	const cat = state.catalog.find((c) => c.name === previousName) || state.catalog[0];
+	state.activeCatId = cat.id;
+	previousName = cat.name;
+
 	renderCats();
 	renderGrid(false);
+}
+
+let previousName = null;
+
+/* --------------------------------------------------------------------------
+   Mise à jour du catalogue par SSH
+
+   La boulangerie ne met pas son catalogue à jour depuis l'écran : il n'y a
+   volontairement aucun bouton « paramètres ». On dépose un CSV sur la machine,
+   le serveur le réimporte, et la caisse s'en aperçoit ici.
+
+   Le rafraîchissement n'a jamais lieu pendant une vente : ni panier en cours,
+   ni écran de paiement ouvert. Voir un produit changer sous le doigt serait
+   pire que de rester une minute sur l'ancien catalogue.
+   -------------------------------------------------------------------------- */
+
+let catalogVersion = null;
+
+async function verifierCatalogue() {
+	if (state.cart.size > 0 || !dom.payScreen.hidden || state.busy) return;
+	try {
+		const res = await fetch('/api/catalog/version');
+		if (!res.ok) return;
+		const { version } = await res.json();
+		if (catalogVersion === null) { catalogVersion = version; return; }
+		if (version !== catalogVersion) {
+			catalogVersion = version;
+			await loadCatalog();
+			console.info('catalogue rechargé');
+		}
+	} catch {
+		// Serveur momentanément absent : on retentera au prochain tour.
+	}
+}
+
+setInterval(verifierCatalogue, 8000);
+
+/* Chaque catégorie reçoit une icône déduite de son nom. Le catalogue vient d'un
+   CSV qui ne contient que « catégorie, produit, prix » : rien ne dit quelle
+   icône utiliser, on la devine donc par mots-clés. Une catégorie inattendue
+   tombe sur l'icône générique, ce qui est toujours mieux que rien. */
+const ICONES = [
+	[/pain|boulang|miche|baguet/, 'i-pain', 'wheat'],
+	[/viennois|croissant|couque|donut/, 'i-croissant', 'butter'],
+	[/p[âa]tiss|g[âa]teau|tarte|dessert|sucr/, 'i-patisserie', 'berry'],
+	[/sandwich|snack|salade|tartine|panini|baguette garnie/, 'i-sandwich', 'herb'],
+	[/boisson|caf[ée]|jus|drink|soda|th[ée]/, 'i-boisson', 'water'],
+];
+
+function iconeCategorie(nom, couleur) {
+	const n = nom.toLowerCase();
+	for (const [motif, icone, teinte] of ICONES) {
+		if (motif.test(n)) return { icone, teinte: couleur || teinte };
+	}
+	return { icone: 'i-divers', teinte: couleur || 'stone' };
 }
 
 function renderCats() {
 	dom.cats.innerHTML = '';
 	for (const c of state.catalog) {
+		const { icone, teinte } = iconeCategorie(c.name, c.color);
 		const b = document.createElement('button');
 		b.type = 'button';
 		b.className = 'cat';
 		b.dataset.catId = c.id;
 		b.setAttribute('role', 'tab');
 		b.setAttribute('aria-selected', String(c.id === state.activeCatId));
-		b.innerHTML = `<span class="cat-dot" style="--dot:var(--c-${c.color || 'stone'})"></span>${escapeHtml(c.name)}`;
+		b.innerHTML =
+			`<svg class="cat-ico" style="--dot:var(--c-${teinte})" aria-hidden="true">` +
+			`<use href="#${icone}"></use></svg>${escapeHtml(c.name)}`;
 		dom.cats.appendChild(b);
 	}
 }
@@ -175,9 +245,15 @@ function renderGrid(withAnimation = true) {
 	for (const p of cat.products) {
 		const b = document.createElement('button');
 		b.type = 'button';
-		b.className = 'tile';
+		b.className = p.image ? 'tile has-img' : 'tile';
 		b.dataset.productId = p.id;
+		// Le nom accessible est porté par le bouton : l'image est décorative
+		// (alt vide) et ne doit pas être annoncée à la place du produit.
+		b.setAttribute('aria-label', `${p.name}, ${money(p.priceCents)}`);
 		b.innerHTML =
+			(p.image
+				? `<img class="tile-img" src="${escapeHtml(p.image)}" alt="" loading="lazy" decoding="async">`
+				: '') +
 			`<span class="tile-name">${escapeHtml(p.name)}</span>` +
 			`<span class="tile-price">${money(p.priceCents)}</span>`;
 		dom.grid.appendChild(b);
@@ -375,12 +451,12 @@ function renderPad(due) {
 	for (const step of [50, 100, 500, 1000]) {
 		candidates.add(Math.ceil(due / step) * step);
 	}
-	// Coupures belges courantes.
-	for (const note of [500, 1000, 2000, 5000]) {
+	// Coupures belges courantes, jusqu'au billet de 100 €.
+	for (const note of [500, 1000, 2000, 5000, 10000]) {
 		if (note > due) candidates.add(note);
 	}
 
-	const values = [...candidates].filter((v) => v >= due).sort((a, b) => a - b).slice(0, 8);
+	const values = [...candidates].filter((v) => v >= due).sort((a, b) => a - b).slice(0, 9);
 
 	dom.pad.innerHTML = '';
 	for (const v of values) {
@@ -449,24 +525,58 @@ async function confirmPayment() {
 	state.busy = false;
 }
 
+/* L'encaissement est le moment le plus satisfaisant de la vente : il mérite un
+   enchaînement, pas une coupure. La feuille de paiement se retire vers le bas
+   pendant que la confirmation monte — les deux se croisent, si bien que l'œil
+   suit un mouvement continu au lieu de subir deux changements d'écran.
+   La coche arrive avec un léger dépassement d'échelle : c'est ce petit rebond
+   qui fait qu'on la sent « se poser » au lieu d'apparaître. */
 function finishSale(change) {
-	closePayment();
-	state.cart.clear();
-	renderCart(null);
+	// 1. Sortie de la feuille de paiement.
+	animate(dom.paySheet, [
+		{ opacity: 1, transform: 'scale(1) translateY(0)' },
+		{ opacity: 0, transform: 'scale(0.955) translateY(0.7rem)' },
+	], 200, { fill: 'forwards', easing: 'cubic-bezier(0.4, 0, 0.9, 1)' });
+	animate(dom.payScreen, [{ opacity: 1 }, { opacity: 0 }], 240, { fill: 'forwards' });
 
+	// 2. Entrée de la confirmation, croisant la sortie précédente.
 	dom.doneText.textContent =
 		change != null && change > 0 ? `À rendre ${money(change)}` : 'Vente enregistrée';
 
 	dom.done.hidden = false;
-	animate(dom.done, [{ opacity: 0 }, { opacity: 1 }], 160);
-	animate(document.querySelector('.check-circle'),
-		[{ strokeDashoffset: 152 }, { strokeDashoffset: 0 }], 380);
-	animate(document.querySelector('.check-mark'),
-		[{ strokeDashoffset: 40 }, { strokeDashoffset: 40 }, { strokeDashoffset: 0 }], 620);
+	animate(dom.done, [{ opacity: 0 }, { opacity: 1 }], 200, { fill: 'forwards', delay: 90 });
 
+	animate(dom.check, [
+		{ opacity: 0, transform: 'scale(0.7)' },
+		{ opacity: 1, transform: 'scale(1.06)', offset: 0.6 },
+		{ opacity: 1, transform: 'scale(1)' },
+	], 460, { fill: 'forwards', delay: 110 });
+
+	animate(dom.checkCircle,
+		[{ strokeDashoffset: 152 }, { strokeDashoffset: 0 }], 420,
+		{ fill: 'forwards', delay: 130 });
+	animate(dom.checkMark,
+		[{ strokeDashoffset: 40 }, { strokeDashoffset: 40 }, { strokeDashoffset: 0 }], 600,
+		{ fill: 'forwards', delay: 130 });
+
+	// Le montant à rendre monte en dernier : c'est la seule chose que la
+	// caissière doit encore lire.
+	animate(dom.doneText, [
+		{ opacity: 0, transform: 'translateY(0.7rem)' },
+		{ opacity: 1, transform: 'translateY(0)' },
+	], 320, { fill: 'forwards', delay: 320 });
+
+	// 3. Remise à zéro, effectuée derrière la confirmation.
 	setTimeout(() => {
-		animate(dom.done, [{ opacity: 1 }, { opacity: 0 }], 180);
-		setTimeout(() => { dom.done.hidden = true; }, 170);
+		closePayment();
+		state.cart.clear();
+		renderCart(null);
+	}, 260);
+
+	// 4. Disparition.
+	setTimeout(() => {
+		animate(dom.done, [{ opacity: 1 }, { opacity: 0 }], 260, { fill: 'forwards' });
+		setTimeout(() => { dom.done.hidden = true; }, 265);
 	}, DUREE_DONE);
 }
 

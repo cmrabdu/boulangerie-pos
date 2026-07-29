@@ -33,6 +33,13 @@ Aucun clavier ni souris : **tout doit être atteignable au doigt**.
   visibles ; on ne demande pas à quelqu'un de découvrir un swipe.
 - **Une action destructrice se confirme.** « Tout effacer » s'arme d'abord.
 - **Une vente qui échoue à s'enregistrer n'efface jamais le ticket.**
+- **Aucun écran de réglages, aucun bouton « paramètres ».** Le catalogue se met
+  à jour en déposant un CSV par SSH. Tout ce qui ne sert pas à encaisser n'a
+  rien à faire devant quelqu'un qui sert des clients.
+- **Une image manquante n'est jamais un trou.** Un produit sans illustration
+  s'affiche exactement comme si la fonctionnalité n'existait pas.
+- **Jamais de clé d'API dans le dépôt ni dans le code.** Les scripts la lisent
+  depuis l'environnement.
 
 ## Simplicité
 

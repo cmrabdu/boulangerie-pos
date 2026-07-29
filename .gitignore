@@ -1,6 +1,20 @@
 /boulangerie-pos
 /dist/
+
+# Secrets : ce dépôt est public. Aucune clé ne doit pouvoir y atterrir.
+*.env
+.env*
+!data/exemple-catalogue.csv
+
+# Images générées : lourdes, et propres à chaque boulangerie. Les illustrations
+# SVG de démonstration, elles, sont versionnées : légères et lisibles en texte.
+/img/products/*
+!/img/products/.gitkeep
+!/img/products/*.svg
 *.db
 *.db-shm
 *.db-wal
+
+# Le catalogue réel de la boulangerie n'a rien à faire dans un dépôt public.
+/catalogue.csv
 .DS_Store

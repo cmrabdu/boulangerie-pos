@@ -19,6 +19,8 @@ que de grosse calculatrice, sur un PC tactile à Celeron J1900.
 - Encaissement **Bancontact** (le montant est encodé sur le terminal)
 - Arrondi belge aux 5 centimes sur les espèces, toujours affiché explicitement
 - Journal des ventes en SQLite, exportable en CSV ouvrable dans Excel
+- Illustrations des produits et icônes de catégories, sans agrandir les cartes
+- Catalogue mis à jour en déposant un fichier CSV : ni bouton, ni redémarrage
 
 ## Démarrage
 
@@ -46,13 +48,69 @@ Pains;Pistolet;0,55
 Viennoiseries;Croissant;1,30
 ```
 
+Les prix acceptent `1,30`, `1.30`, `1.3`, `€ 1,30`, les espaces insécables et
+le BOM des exports Excel. L'ancien catalogue est **archivé**, pas supprimé :
+les ventes déjà enregistrées gardent une référence valide.
+
+### Mise à jour depuis un autre poste
+
+La caisse **surveille** le fichier `catalogue.csv` posé à côté d'elle. Il suffit
+de le déposer, par SSH depuis n'importe quelle machine :
+
+```bash
+scp catalogue.csv caisse:/opt/caisse/catalogue.csv
+```
+
+Le catalogue est réimporté en quelques secondes et l'écran se met à jour tout
+seul — sans redémarrage, sans rechargement de page, et **sans bouton
+« paramètres » à l'écran**. C'est délibéré : tout ce qui ne sert pas à encaisser
+n'a rien à faire devant quelqu'un qui sert des clients.
+
+Le rafraîchissement n'a jamais lieu au milieu d'une vente : il attend que le
+panier soit vide et qu'aucun écran de paiement ne soit ouvert. Un CSV mal formé
+est refusé, et l'ancien catalogue reste en place.
+
+Import ponctuel en ligne de commande, si besoin :
+
 ```bash
 ./dist/boulangerie-pos -import catalogue.csv
 ```
 
-Les prix acceptent `1,30`, `1.30`, `1.3`, `€ 1,30`, les espaces insécables et
-le BOM des exports Excel. L'ancien catalogue est **archivé**, pas supprimé :
-les ventes déjà enregistrées gardent une référence valide.
+## Images des produits
+
+Chaque produit cherche une image nommée d'après son nom, sans accents :
+
+| Produit | Fichier attendu |
+|---|---|
+| Baguette | `img/products/baguette.png` |
+| Éclair chocolat | `img/products/eclair-chocolat.png` |
+| Pain gris 500g | `img/products/pain-gris-500g.png` |
+
+Extensions acceptées, par ordre de préférence : `.png`, `.webp`, `.jpg`,
+`.svg`. **Un produit sans image s'affiche normalement**, sans trou ni cadre
+vide — rien n'oblige à toutes les fournir.
+
+L'image se loge dans la carte existante, qui ne grandit pas : elle occupe la
+moitié droite en débordant légèrement, pendant qu'un dégradé de la couleur de
+la carte passe au-dessus côté texte. Le nom et le prix restent donc lisibles
+quelle que soit l'image.
+
+Le dépôt contient quelques illustrations SVG de démonstration. Pour générer des
+images à la place, avec votre propre clé OpenAI :
+
+```bash
+mkdir -p ~/.config/boulangerie-pos
+chmod 700 ~/.config/boulangerie-pos
+printf 'export OPENAI_API_KEY=%s\n' 'votre-clé' > ~/.config/boulangerie-pos/openai.env
+chmod 600 ~/.config/boulangerie-pos/openai.env
+```
+
+```bash
+source ~/.config/boulangerie-pos/openai.env && ./scripts/generer-images.sh
+```
+
+La clé reste dans votre environnement : le script la lit, ne l'affiche jamais et
+ne l'écrit nulle part. Le fichier vit **hors du dépôt**, qui est public.
 
 ## Déployer sur la caisse
 
