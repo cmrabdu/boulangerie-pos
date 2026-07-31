@@ -133,6 +133,33 @@ Statuts : ⬜ à faire · 🟡 en cours · ✅ terminé et vérifié
 - [x] 7t.5 Vérifié de bout en bout : 3,75 € + 2,00 € = 5,75 €, 10 € donnés,
       4,25 € rendus, vente retrouvée dans l'export CSV
 
+### Phase 9 — Kit de déploiement ✅
+
+Écrit et **testé de bout en bout** dans une Debian 12 amd64 vierge (OrbStack,
+même architecture que le J1900).
+
+- [x] 9.1 `deploy/installer.sh` — utilisateur dédié sans droits, logiciel dans
+      `/opt`, données dans `/var/lib`, idempotent
+- [x] 9.2 Deux services séparés : le serveur et l'écran. Chromium peut planter
+      sans toucher à la base
+- [x] 9.3 Les **deux** piles d'affichage installées — Wayland/cage par défaut,
+      X11 en secours, bascule sur place sans téléchargement
+- [x] 9.4 Démarrage silencieux : GRUB sans menu, sans journal, sans curseur
+- [x] 9.5 Sauvegarde quotidienne par `VACUUM INTO`, caisse allumée, 30 jours
+- [x] 9.6 Confinement au SSD : `GRUB_DISABLE_OS_PROBER=true`, rapport des
+      disques touchés et non touchés, contrôle de `/etc/fstab`
+- [x] 9.7 `make kit` produit le dossier à copier sur clé USB (20 Mo)
+- [x] 9.8 `deploy/preseed.cfg` pour une installation Debian sans question
+- [x] 9.9 **Vérifié sur machine vierge** : les 4 unités systemd valides, service
+      actif, catalogue et images servis, sauvegarde produite, écoute limitée à
+      `127.0.0.1`
+
+**Bug trouvé par le test, pas par la relecture** : `StartLimitIntervalSec` était
+dans `[Service]` au lieu de `[Unit]`. systemd l'ignorait silencieusement, donc
+la limite de cinq redémarrages restait active — au sixième plantage, la
+boulangerie se retrouvait sans caisse. C'est exactement ce que la ligne devait
+empêcher.
+
 ### Phase 8 — Durcissement ⬜
 
 - [ ] 8.1 Sauvegarde automatique de la base (clé USB ou second emplacement)

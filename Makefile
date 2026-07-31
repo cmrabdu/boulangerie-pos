@@ -6,7 +6,7 @@ ADDR    ?= 127.0.0.1:8099
 DB      ?= caisse.db
 CSV     ?= catalogue.csv
 
-.PHONY: dev run build linux lan test fmt clean
+.PHONY: dev run build linux lan kit test fmt clean
 
 ## dev : lance la caisse en lisant web/ depuis le disque.
 ## Une retouche du CSS ou du JS ne demande qu'un rechargement de page.
@@ -32,6 +32,23 @@ run: build
 linux:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o $(DIST)/$(BIN)-linux-amd64 .
 	@ls -lh $(DIST)/$(BIN)-linux-amd64
+
+## kit : le dossier à copier sur une clé USB pour installer la caisse.
+## Contient tout ce dont l'installeur a besoin, et rien d'autre.
+kit: linux
+	rm -rf $(DIST)/kit
+	mkdir -p $(DIST)/kit
+	cp $(DIST)/$(BIN)-linux-amd64 $(DIST)/kit/
+	cp deploy/installer.sh $(DIST)/kit/
+	cp deploy/README.md     $(DIST)/kit/
+	cp deploy/preseed.cfg   $(DIST)/kit/
+	cp -a img               $(DIST)/kit/
+	@[ -f $(CSV) ] && cp $(CSV) $(DIST)/kit/ && echo "  catalogue inclus" || echo "  (pas de $(CSV) : le catalogue de démonstration servira)"
+	@[ -f $$HOME/.ssh/id_ed25519.pub ] && cp $$HOME/.ssh/id_ed25519.pub $(DIST)/kit/cle-publique.pub && echo "  clé SSH incluse" || echo "  (pas de clé SSH trouvée)"
+	@chmod +x $(DIST)/kit/installer.sh
+	@echo
+	@du -sh $(DIST)/kit
+	@echo "  → copier $(DIST)/kit/ sur une clé USB"
 
 test:
 	go test ./...

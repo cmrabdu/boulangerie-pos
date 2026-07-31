@@ -10,12 +10,15 @@ import (
 	"embed"
 	"errors"
 	"flag"
+	"fmt"
 	"io/fs"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -37,6 +40,7 @@ func main() {
 		dev     = flag.Bool("dev", false, "servir web/ depuis le disque : une retouche du CSS ne demande qu'un rechargement de page")
 		imgDir  = flag.String("img", "img", "dossier des illustrations de produits (img/products/<slug>.png)")
 		watch   = flag.String("catalogue", "", "fichier CSV surveillé : la caisse se met à jour dès qu'il change, sans redémarrage")
+		backup  = flag.String("backup", "", "copier la base vers ce fichier puis quitter (fonctionne caisse allumée)")
 	)
 	flag.Parse()
 
@@ -53,6 +57,13 @@ func main() {
 		log.Fatalf("base de données : %v", err)
 	}
 	defer database.Close()
+
+	if *backup != "" {
+		if err := sauvegarder(database, *backup); err != nil {
+			log.Fatalf("sauvegarde : %v", err)
+		}
+		return
+	}
 
 	if *csvPath != "" {
 		if err := importCSV(database, *csvPath); err != nil {
@@ -90,6 +101,37 @@ func importCSV(database *db.DB, path string) error {
 		n += len(c.Products)
 	}
 	log.Printf("catalogue importé : %d catégories, %d produits", len(cats), n)
+	return nil
+}
+
+// sauvegarder écrit une copie cohérente de la base, caisse allumée.
+//
+// `VACUUM INTO` produit un fichier SQLite complet et compacté à partir d'une
+// transaction de lecture : contrairement à une copie de fichier, il ne peut pas
+// attraper la base au milieu d'une écriture, et il n'a pas besoin des fichiers
+// -wal et -shm qui l'accompagnent. C'est la seule façon correcte de sauvegarder
+// une base en mode WAL sans arrêter le service.
+func sauvegarder(database *db.DB, dest string) error {
+	if _, err := os.Stat(dest); err == nil {
+		return fmt.Errorf("%s existe déjà, rien n'a été écrit", dest)
+	}
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+		return err
+	}
+
+	// VACUUM INTO n'accepte pas de paramètre lié : la destination doit être
+	// écrite dans la requête. On double les apostrophes, seul caractère qui
+	// pourrait en sortir.
+	litteral := "'" + strings.ReplaceAll(dest, "'", "''") + "'"
+	if _, err := database.Exec("VACUUM INTO " + litteral); err != nil {
+		return err
+	}
+
+	fi, err := os.Stat(dest)
+	if err != nil {
+		return err
+	}
+	log.Printf("sauvegarde écrite : %s (%d octets)", dest, fi.Size())
 	return nil
 }
 
