@@ -150,7 +150,12 @@ systemctl enable --now ssh >/dev/null 2>&1 || systemctl enable --now sshd >/dev/
 # Le nom de la machine sert à la joindre sans connaître son adresse :
 # « ssh caisse.local » depuis n'importe quel poste du réseau.
 hostnamectl set-hostname caisse 2>/dev/null || echo caisse > /etc/hostname
-grep -q 'caisse' /etc/hosts || echo "127.0.1.1 caisse" >> /etc/hosts
+# Motif ancré, et pas un simple « caisse » : sur une machine nommée
+# « caisse-neuve », la recherche approximative trouvait une correspondance, la
+# ligne n'était jamais ajoutée, et le nom devenait irrésolvable — sudo mettait
+# alors dix secondes à répondre à chaque commande.
+grep -qE '^127\.0\.1\.1[[:space:]]+caisse([[:space:]]|$)' /etc/hosts \
+	|| echo "127.0.1.1 caisse" >> /etc/hosts
 
 # --------------------------------------------------------------------------
 msg "Service du serveur"
