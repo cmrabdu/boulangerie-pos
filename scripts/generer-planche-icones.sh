@@ -5,11 +5,11 @@
 #   ./scripts/generer-planche-icones.sh gras
 #   ./scripts/generer-planche-icones.sh plein duo gras     # plusieurs styles
 #
-# Pourquoi une planche plutôt que six appels : demandées une par une, les icônes
-# n'ont aucune raison de partager la même graisse de trait, le même niveau de
-# détail ni le même équilibre — et le jeu paraît dépareillé, ce qui est
+# Pourquoi une planche plutôt qu'un appel par icône : demandées une par une, les
+# icônes n'ont aucune raison de partager la même graisse de trait, le même niveau
+# de détail ni le même équilibre — et le jeu paraît dépareillé, ce qui est
 # exactement le reproche qu'on leur faisait. Sur une planche unique, le modèle
-# tient un style d'une case à l'autre. C'est aussi six fois moins cher.
+# tient un style d'une case à l'autre. C'est aussi neuf fois moins cher.
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -31,20 +31,26 @@ command -v jq >/dev/null || { echo "jq est requis : brew install jq" >&2; exit 1
 MODELE="${MODELE:-gpt-image-1.5}"
 QUALITE="${QUALITE:-medium}"   # une planche porte six dessins : la qualité basse les rend mous
 
-# Ordre de lecture, 3 colonnes × 2 lignes.
-NOMS=(pain croissant patisserie sandwich boisson divers)
+# Ordre de lecture, COLONNES × LIGNES. Huit catégories : quatre sur deux.
+COLONNES=4
+LIGNES=2
+TAILLE=1536x1024
+
+NOMS=(pain croissant patisserie sale sandwich boisson-chaude boisson-froide divers)
 
 SUJETS="Case 1 : une miche de pain ronde avec une baguette posée en travers. \
 Case 2 : un croissant. \
 Case 3 : une part de gâteau triangulaire vue de côté. \
-Case 4 : un sandwich triangulaire vu de côté. \
-Case 5 : un gobelet de boisson à emporter avec son couvercle. \
-Case 6 : un sac en papier de boulangerie avec ses deux anses."
+Case 4 : une part de pizza triangulaire, pointe vers le bas, croûte arrondie en haut. \
+Case 5 : un sandwich triangulaire vu de côté. \
+Case 6 : une tasse à anse, vue de côté, surmontée de deux volutes de vapeur. \
+Case 7 : une canette de soda fermée, vue de face, avec sa languette d'ouverture. \
+Case 8 : un sac en papier de boulangerie avec ses deux anses."
 
-CADRE="Planche de six icônes disposées en grille régulière de 3 colonnes et 2 lignes, \
+CADRE="Planche de huit icônes disposées en grille régulière de 4 colonnes et 2 lignes, \
 espacement identique entre toutes les cases, chaque icône centrée dans sa case et occupant \
 la majeure partie de sa case. Fond entièrement transparent. Style rigoureusement identique \
-pour les six icônes : même graisse, même niveau de simplification, même famille de formes. \
+pour les huit icônes : même graisse, même niveau de simplification, même famille de formes. \
 Aucun texte, aucun chiffre, aucun cadre, aucune bordure, aucune ombre portée, aucun fond coloré."
 
 style_gras() {
@@ -81,7 +87,8 @@ for STYLE in "$@"; do
 	if [ ! -f "$planche" ]; then
 		echo "→ planche « $STYLE » ($MODELE, qualité $QUALITE)…"
 		reponse=$(jq -n --arg p "$("style_$STYLE")" --arg m "$MODELE" --arg q "$QUALITE" \
-			'{model:$m, prompt:$p, n:1, size:"1536x1024", quality:$q,
+			--arg s "$TAILLE" \
+			'{model:$m, prompt:$p, n:1, size:$s, quality:$q,
 			  background:"transparent", output_format:"png"}' \
 			| curl -sS https://api.openai.com/v1/images/generations \
 				-H "Authorization: Bearer $OPENAI_API_KEY" \
@@ -101,7 +108,7 @@ for STYLE in "$@"; do
 
 	rm -rf "$dest"
 	uv run --quiet --with pillow python scripts/decouper-planche.py \
-		"$planche" "$dest" 3 2 "${NOMS[@]}"
+		"$planche" "$dest" "$COLONNES" "$LIGNES" "${NOMS[@]}"
 	uv run --quiet --with pillow python scripts/normaliser-icones.py "$dest"
 
 	for f in "$dest"/*.png; do

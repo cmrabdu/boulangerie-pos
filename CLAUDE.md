@@ -143,6 +143,11 @@ Pour en régénérer un jeu :
 ./scripts/generer-planche-icones.sh plein
 ```
 
-Toujours **une planche de six d'un seul tenant**, jamais six appels séparés :
-demandées une par une, les icônes n'ont aucune raison de partager la même
-graisse ni le même niveau de détail, et le jeu paraît dépareillé.
+Toujours **une planche d'un seul tenant** — neuf cases depuis le vrai catalogue,
+en grille 3×3 — jamais un appel par icône : demandées une par une, les icônes
+n'ont aucune raison de partager la même graisse ni le même niveau de détail, et
+le jeu paraît dépareillé.
+
+Chaque catégorie peut lister plusieurs icônes par ordre de préférence dans
+`ICONES` (`web/js/app.js`) : la première qui existe gagne. C'est ce qui permet de
+scinder une famille avant d'avoir dessiné le pictogramme correspondant.
