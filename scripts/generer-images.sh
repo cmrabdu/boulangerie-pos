@@ -80,80 +80,147 @@ STYLES="photo plat gouache"
 
 # Les slugs doivent correspondre à ceux que calcule internal/db.Slugify à partir
 # du nom du produit, sans quoi la caisse ne trouvera pas l'image.
+#
+# Deux garde-fous contre le cas où un même mot désigne deux choses :
+#
+#  - le « + » d'un supplément se traduit par « supplement- » (« + Fromage » →
+#    « supplement-fromage »), si bien qu'une garniture ne pioche jamais le dessin
+#    du sandwich du même nom ;
+#  - un slug peut en plus être préfixé par sa catégorie (« pains-fleur ») : la
+#    caisse cherche d'abord le nom préfixé, puis le nom nu.
+#
+# Sans ça, le supplément « Fromage » et le sandwich « Fromage » partagent un seul
+# dessin, et l'un des deux est forcément faux : une tranche là où il fallait un
+# sandwich, ou l'inverse.
 PRODUITS=(
 	# Pains
 	"baguette|une baguette de pain française dorée et croustillante"
-	"baguette-tradition|une baguette de tradition française à la croûte très craquelée"
+	"pain-carre-blanc|une miche de pain de mie blanc carrée et dorée"
+	"simit-istanbul|un simit turc, anneau de pain couvert de graines de sésame"
 	"pistolet|un petit pain rond belge fendu au milieu, doré"
-	"sandwich|un petit pain long et moelleux à sandwich"
-	"pain-gris-500g|une miche de pain gris rustique à la croûte farinée"
-	"pain-blanc-500g|un pain de mie blanc en miche rectangulaire dorée"
-	"pain-complet|un pain complet rond à la croûte foncée"
-	"pain-multicereales|un pain aux céréales couvert de graines"
-	"pain-aux-noix|un pain rustique aux noix"
-	"ciabatta|une ciabatta italienne allongée et farinée"
-	"pain-d-epeautre|un pain d'épeautre rond et rustique"
-	"demi-gris|une demi-miche de pain gris"
+	"mitraillette|un petit pain long et étroit, doré"
+	"pain-turc|un pain turc plat et ovale, doré, saupoudré de sésame"
+	"pain-de-campagne|une grande miche de pain de campagne à la croûte farinée"
+	"piccolo|un tout petit pain rond doré"
+	"fleur|un pain rond dont la croûte est fendue en pétales, en forme de fleur"
+	"pitta|un pain pitta rond et plat"
+	"pain-carre-cereales|une miche de pain de mie carrée aux céréales, couverte de graines"
+	"mitraillettes-5|cinq petits pains longs et étroits alignés"
+	"pain-carre-gris|une miche de pain de mie gris carrée"
+	"tresse|un pain brioché tressé, doré"
+	"pistolets-5|cinq petits pains ronds belges groupés"
+	"petit-carre-blanc|un petit pain de mie blanc carré"
+	"pittas-5|cinq pains pitta ronds empilés"
+	"baguette-grise|une baguette de pain gris"
+	"petit-carre-cereales|un petit pain de mie carré aux céréales"
+	"simit-bagel|un simit turc en forme de bagel, couvert de sésame"
+	"petit-carre-gris|un petit pain de mie gris carré"
+	"pistolet-gris|un petit pain rond gris fendu au milieu"
+	"pain-ramadan|un pain plat rond turc de ramadan, quadrillé et doré, aux graines de sésame et de nigelle"
 
 	# Viennoiseries
 	"croissant|un croissant au beurre doré et feuilleté"
-	"couque-au-beurre|une couque au beurre briochée en escargot, dorée"
-	"couque-au-chocolat|un pain au chocolat feuilleté avec ses deux barres de chocolat"
-	"couque-suisse|une couque suisse à la crème pâtissière et aux pépites de chocolat"
-	"pain-aux-raisins|un pain aux raisins en spirale"
-	"chausson-aux-pommes|un chausson aux pommes doré"
-	"croissant-amandes|un croissant aux amandes couvert d'amandes effilées et de sucre glace"
+	"pain-au-chocolat|un pain au chocolat feuilleté avec ses deux barres de chocolat"
+	"croissant-nutella|un croissant fourré à la pâte de noisettes, coulée de chocolat visible"
+	"croissant-aux-amandes|un croissant aux amandes couvert d'amandes effilées et de sucre glace"
 	"donut|un donut glacé au sucre rose avec des vermicelles"
-	"cramique|un cramique belge, brioche aux raisins secs, tranché"
-	"craquelin|un craquelin belge, brioche au sucre perlé"
+	"pain-chocolat-creme|une viennoiserie feuilletée rectangulaire à la crème pâtissière et aux pépites de chocolat"
+	"muffin-milka|un muffin au chocolat dans sa caissette en papier"
+	"donut-chocolat|un donut glacé au chocolat"
+	"croissant-a-la-creme|un croissant fourré à la crème pâtissière"
+	"beignet-nutella|un petit beignet rond fourré à la pâte de noisettes, saupoudré de sucre"
+
+	# Boissons chaudes
+	"cafe|une tasse de café expresso en porcelaine blanche"
+	"the|une tasse de thé clair avec son sachet"
+	"cafe-au-lait|une tasse de café au lait"
+	"chocolat-chaud|une tasse de chocolat chaud avec de la crème fouettée"
+	"cappuccino|un cappuccino en tasse avec sa mousse de lait"
+	"deca|une tasse de café décaféiné en porcelaine blanche"
+
+	# Boissons froides
+	"fanta|une canette de soda à l'orange de 33 cl"
+	"eau|une bouteille d'eau plate de 50 cl en plastique transparent"
+	"aquarius|une bouteille de boisson isotonique claire"
+	"coca-light|une canette de cola light argentée de 33 cl"
+	"coca-cola|une canette de soda au cola rouge de 33 cl"
+	"tropico|une bouteille de boisson aux fruits tropicaux orangée"
+	"eau-petillante|une bouteille d'eau pétillante de 50 cl aux bulles visibles"
+	"ice-tea|une canette de thé glacé jaune de 33 cl"
+	"coca-bouteille|une bouteille de soda au cola de 50 cl"
+	"fanta-bouteille|une bouteille de soda à l'orange de 50 cl"
+	"ayran|un gobelet de boisson lactée turque au yaourt"
+	"fuze-tea|une bouteille de thé glacé"
+	"capri-sun|une pochette souple de jus de fruits avec sa paille"
+	"ice-tea-peche|une canette de thé glacé à la pêche"
+	"fanta-light|une canette de soda à l'orange light"
 
 	# Pâtisseries
-	"eclair-chocolat|un éclair au chocolat au glaçage brillant"
-	"eclair-vanille|un éclair à la vanille au glaçage blanc nacré"
+	"eclair|un éclair au chocolat au glaçage brillant"
 	"merveilleux|un merveilleux belge, meringue et crème fouettée couverte de copeaux de chocolat"
-	"tarte-au-riz-part|une part de tarte au riz belge, crème dorée"
-	"tarte-aux-pommes-part|une part de tarte aux pommes aux lamelles apparentes"
-	"tarte-au-sucre-part|une part de tarte au sucre dorée et caramélisée"
-	"millefeuille|un millefeuille à la crème pâtissière et au glaçage marbré"
-	"tiramisu|une part de tiramisu saupoudrée de cacao"
-	"moelleux-chocolat|un moelleux au chocolat au cœur fondant"
-	"gateau-6-pers|un gâteau rond entier décoré à la crème, pour six personnes"
-	"gateau-8-pers|un grand gâteau rond entier décoré à la crème et aux fruits"
+	"baklava|deux baklavas en losange, pâte filo dorée et pistaches concassées"
+	"tiramisu-speculoos|une part de tiramisu au spéculoos dans une coupelle"
+	"tiramisu-chocolat|une part de tiramisu au chocolat saupoudrée de cacao"
+	"parfait|un parfait glacé dans une coupe"
+	"tarte-au-riz|une tarte au riz belge entière, crème dorée"
+	"tarte-aux-fraises|une tarte aux fraises entière, fraises rangées et brillantes"
+	"tarte-aux-pommes|une tarte aux pommes entière, lamelles apparentes"
+	"tarte-au-sucre|une tarte au sucre belge entière, dorée et caramélisée"
 
 	# Sandwichs
-	"fromage|un sandwich au fromage dans un petit pain, garniture visible"
-	"jambon|un sandwich au jambon dans un petit pain, garniture visible"
-	"jambon-fromage|un sandwich jambon-fromage dans un petit pain, garniture visible"
-	"thon|un sandwich au thon et crudités dans un petit pain"
-	"poulet-curry|un sandwich au poulet curry dans un petit pain"
 	"americain|un sandwich à l'américain, préparation de viande hachée, dans un petit pain"
-	"crabe|un sandwich au surimi et crudités dans un petit pain"
-	"club-sandwich|un club sandwich en triangles superposés avec pics"
-	"panini|un panini grillé aux marques de gril bien visibles"
+	"thon-mayo|un sandwich au thon mayonnaise dans un petit pain"
+	"poulet-mayo|un sandwich au poulet mayonnaise dans un petit pain"
+	"thon-piquant|un sandwich au thon sauce piquante rouge dans un petit pain"
+	"poulet-curry|un sandwich au poulet curry dans un petit pain"
+	"thon-cocktail|un sandwich au thon sauce cocktail rosée dans un petit pain"
+	"poulet-andalouse|un sandwich au poulet sauce andalouse dans un petit pain"
+	"jambon-fromage|un sandwich jambon-fromage dans un petit pain, garniture visible"
+	"poulet-piquant|un sandwich au poulet sauce piquante dans un petit pain"
+	"thon-portugais|un sandwich au thon et aux poivrons grillés dans un petit pain"
+	"poulet-brazil|un sandwich au poulet sauce brésilienne dans un petit pain"
+	"fromage|un sandwich au fromage dans un petit pain, garniture visible"
 
-	# Boissons
-	"eau-50cl|une bouteille d'eau plate de 50 cl en plastique transparent"
-	"eau-petillante-50cl|une bouteille d'eau pétillante de 50 cl aux bulles visibles"
-	"coca-33cl|une canette de soda au cola rouge de 33 cl"
-	"ice-tea-33cl|une canette de thé glacé jaune de 33 cl"
-	"jus-d-orange|un verre de jus d'orange frais"
-	"cafe|une tasse de café expresso en porcelaine blanche"
-	"cappuccino|un cappuccino en tasse avec sa mousse de lait"
-	"chocolat-chaud|une tasse de chocolat chaud avec de la crème fouettée"
-	"the|une tasse de thé clair avec son sachet"
+	# Suppléments — la garniture seule, jamais le sandwich qui la contient.
+	"supplement-salade|quelques feuilles de salade verte fraîches"
+	"supplement-tomate|deux rondelles de tomate fraîche"
+	"supplement-oeuf|deux rondelles d'œuf dur"
+	"supplement-oignon|quelques rondelles d'oignon cru"
+	"supplement-mayonnaise|une cuillerée de mayonnaise"
+	"supplement-carotte|une petite portion de carottes râpées"
+	"supplement-cornichon|deux cornichons entiers"
+	"supplement-concombre|trois rondelles de concombre"
+	"supplement-mais|une petite portion de grains de maïs doux"
+	"supplement-jambon|une tranche de jambon roulée, seule"
+	"supplement-fromage|deux tranches de fromage empilées, seules"
+
+	# Salés
+	"roule-a-la-viande|un roulé de pâte feuilletée à la viande hachée, doré"
+	"pide-feta|une pide turque ovale garnie de fromage blanc fondu"
+	"pide-viande|une pide turque ovale garnie de viande hachée"
+	"pizza|une part de pizza à la tomate et au fromage"
+	"borek-epinards|un börek turc roulé aux épinards, pâte filo dorée"
+	"borek-feta|un börek turc roulé à la feta, pâte filo dorée"
+	"borek-pomme-de-terre|un börek turc roulé à la pomme de terre, pâte filo dorée"
+	"panini-poulet-pane|un panini grillé au poulet pané, marques de gril visibles"
+	"brioche-feta|un petit pain brioché turc fourré à la feta, doré"
+	"pizza-viande|une part de pizza à la viande hachée"
+	"pizza-poivrons|une part de pizza aux poivrons"
+	"brioche-viande|un petit pain brioché turc fourré à la viande, doré"
+	"panini-tomate-mozzarella|un panini grillé à la tomate et à la mozzarella"
 
 	# Divers
 	"sac|un petit sac en papier kraft de boulangerie"
-	"grand-sac|un grand sac en papier kraft de boulangerie avec anses"
 	"bougies|un paquet de bougies d'anniversaire colorées"
-	"oeufs-6|une boîte de six œufs frais, ouverte"
-	"chocolats-250g|un ballotin de pralines belges assorties"
-	"confiture|un pot de confiture de fraises avec son couvercle en tissu"
 )
 
 # --------------------------------------------------------------------------
 
-STYLE="plat"
+# La gouache est la direction arrêtée le 29/07 pour les produits (voir CLAUDE.md,
+# qui promet justement « generer-images.sh sans argument »). Le défaut était resté
+# sur « plat », le style de la phase de comparaison : lancé tel quel sur le vrai
+# catalogue, il aurait produit quatre-vingt-huit images dans le mauvais style.
+STYLE="gouache"
 DEST="img/products"
 MODE="normal"
 CIBLES=()
@@ -250,15 +317,18 @@ for entree in "${PRODUITS[@]}"; do
 
 	printf '%s' "$b64" | base64 --decode > "$sortie"
 
+	# Réduction à 384 px puis WebP, en un seul passage de cwebp.
+	#
 	# La caisse tourne sur un Celeron de 2013 : décoder du 1024×1024 pour
-	# l'afficher dans une vignette serait du gaspillage pur.
-	command -v sips >/dev/null && sips -Z 384 "$sortie" >/dev/null 2>&1 || true
-
-	# Puis WebP, qui divise le poids par cinq à qualité équivalente en gardant
-	# la transparence. Sur neuf produits, 1,4 Mo deviennent 260 Ko — autant de
-	# lecture disque et de décodage en moins au démarrage de la caisse.
+	# l'afficher dans une tuile de 221×123 px serait du gaspillage pur. La
+	# réduction passait autrefois par `sips`, qui n'existe que sur macOS — sur
+	# Linux la ligne était silencieusement sautée et les images restaient à
+	# 1024 px, soit 250 Ko pièce au lieu de 30. `cwebp -resize` fait le même
+	# travail partout, et en une seule compression plutôt que deux.
+	#
+	# Le 0 en hauteur dit à cwebp de la calculer en gardant les proportions.
 	if command -v cwebp >/dev/null; then
-		if cwebp -quiet -q 82 -alpha_q 90 "$sortie" -o "${sortie%.png}.webp"; then
+		if cwebp -quiet -q 82 -alpha_q 90 -resize 384 0 "$sortie" -o "${sortie%.png}.webp"; then
 			rm -f "$sortie"
 			sortie="${sortie%.png}.webp"
 		fi
