@@ -11,6 +11,7 @@ import (
 //	« Pain gris 500g »        → « pain-gris-500g »
 //	« Tarte au riz (part) »   → « tarte-au-riz-part »
 //	« Œufs (6) »              → « oeufs-6 »
+//	« + Fromage »             → « supplement-fromage »
 //
 // Le résultat ne contient que des minuscules non accentuées, des chiffres et
 // des tirets : il doit rester tapable au clavier pour que déposer une image se
@@ -48,8 +49,14 @@ func Slugify(name string) string {
 }
 
 // Ligatures et caractères qui se rendent par plusieurs lettres.
+//
+// Le « + » qui ouvre le nom d'un supplément fait partie du nom : sans lui,
+// « + Fromage » et « Fromage » désignent le même fichier d'image, et l'un des
+// deux se retrouve illustré par l'autre — une tranche là où il fallait un
+// sandwich, ou l'inverse.
 var translit = map[rune]string{
 	'œ': "oe", 'æ': "ae", 'ß': "ss",
+	'+': "supplement",
 }
 
 // Lettres accentuées du français et de ses voisins, ramenées à leur base.

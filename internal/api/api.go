@@ -114,10 +114,21 @@ func (s *Server) getCatalog(w http.ResponseWriter, r *http.Request) {
 		cats = []db.Category{}
 	}
 
+	// Un même mot ne désigne pas la même chose selon l'onglet : « Fromage » est
+	// un sandwich chez les sandwichs et une tranche chez les suppléments, et les
+	// deux tomberaient sur « fromage.webp ». On cherche donc d'abord un fichier
+	// préfixé par la catégorie, et on retombe sur le slug nu — ce qui laisse
+	// intactes toutes les images déjà déposées.
 	images := s.imagesDisponibles()
 	for ci := range cats {
+		prefixe := db.Slugify(cats[ci].Name) + "-"
 		for pi := range cats[ci].Products {
-			if file, ok := images[cats[ci].Products[pi].Slug]; ok {
+			slug := cats[ci].Products[pi].Slug
+			file, ok := images[prefixe+slug]
+			if !ok {
+				file, ok = images[slug]
+			}
+			if ok {
 				cats[ci].Products[pi].Image = "/img/products/" + file
 			}
 		}
