@@ -4,10 +4,10 @@
    Deux principes gouvernent tout ce fichier :
 
    1. TOUT EST EN rem, ET rem SUIT LA HAUTEUR DE L'ÉCRAN.
-      La dalle de la caisse fait peut-être 1366×768, peut-être 1920×1080 : on
-      ne le sait pas encore. En faisant dépendre la taille de base de la hauteur
-      du viewport, l'interface entière se met à l'échelle sans média-queries et
-      sans jamais déborder.
+      La dalle de la caisse fait 1360×768 à 59 Hz — relevé sur place le 01/08.
+      La règle reste : en faisant dépendre la taille de base de la hauteur du
+      viewport, l'interface se met à l'échelle sans média-queries et sans jamais
+      déborder, y compris sur l'écran de développement qui n'a pas ces mesures.
 
    2. ON N'ANIME QUE transform ET opacity.
       Le processeur graphique du J1900 date de 2013. Ces deux propriétés sont
@@ -120,22 +120,43 @@ button {
    Catégories
    -------------------------------------------------------------------------- */
 
+/* Huit catégories pour environ 920 px de colonne en 1360×768 : deux onglets
+   sortent du cadre, la barre défile. Les mesures serrées du bloc suivant
+   (padding 1,05 rem, icône 2,2 rem) sont ce qui permet d'en montrer six d'un
+   coup — dont les boissons chaudes, qui portent le café, deuxième produit le
+   plus vendu de la boutique. Le fondu de bord ci-dessous dit le reste. */
 .cats {
 	display: flex;
-	gap: 0.6rem;
+	gap: 0.45rem;
 	overflow-x: auto;
 	scrollbar-width: none;
 	padding-bottom: 0.15rem;
 }
 .cats::-webkit-scrollbar { display: none; }
 
+/* Le bord se fond dans le fond du côté où il reste des onglets. C'est le seul
+   indice qu'il y a une suite : la barre s'arrête sinon net entre deux onglets,
+   ce qui se lit comme une barre complète. Masque statique, jamais animé. */
+.cats.deborde-droite {
+	-webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+	mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+}
+.cats.deborde-gauche {
+	-webkit-mask-image: linear-gradient(to right, transparent, #000 2rem);
+	mask-image: linear-gradient(to right, transparent, #000 2rem);
+}
+.cats.deborde-gauche.deborde-droite {
+	-webkit-mask-image: linear-gradient(to right, transparent, #000 2rem, #000 calc(100% - 2rem), transparent);
+	mask-image: linear-gradient(to right, transparent, #000 2rem, #000 calc(100% - 2rem), transparent);
+}
+
 .cat {
 	flex: 0 0 auto;
 	display: flex;
 	align-items: center;
-	gap: 0.6rem;
+	gap: 0.5rem;
 	min-height: 5.2rem;             /* ≈ 73 px en 768p, 98 px en 1080p */
-	padding: 0 1.6rem;
+	padding: 0 1.05rem;
 	border-radius: var(--r-md);
 	background: var(--surface);
 	box-shadow: var(--shadow);
@@ -152,8 +173,8 @@ button {
 /* Icônes de catégories. Le texte reste affiché à côté — on s'habitue mieux à un
    mot qu'à un pictogramme, l'icône ne fait qu'accélérer la reconnaissance. */
 .cat-ico {
-	width: 2.5rem;
-	height: 2.5rem;
+	width: 2.2rem;
+	height: 2.2rem;
 	flex: 0 0 auto;
 	object-fit: contain;
 }
@@ -224,10 +245,16 @@ button {
 
 .tile-img {
 	position: absolute;
-	right: -0.7rem;
-	bottom: -0.5rem;
-	width: 66%;
-	height: 104%;
+	/* L'image tient entièrement dans la carte. Elle débordait autrefois de
+	   0,7 rem à droite et 0,5 rem en bas, pour un effet de photo posée : sur les
+	   illustrations de démonstration, allongées et diagonales, la coupe ne se
+	   voyait pas. Sur le vrai catalogue elle amputait tout ce qui est rond — le
+	   simit, le pistolet, la miche de campagne — et un pain coupé net par le bord
+	   de sa carte se lit comme un défaut d'affichage. */
+	right: 0.3rem;
+	bottom: 0.3rem;
+	width: 64%;
+	height: 88%;
 	object-fit: contain;
 	object-position: right bottom;
 	z-index: 0;

@@ -173,9 +173,15 @@ empêcher.
 
 ### Phase 9 — Déploiement ⬜
 
-- [ ] 9.1 Relever la résolution réelle de l'écran (`window.innerWidth/Height`)
+- [x] 9.1 Relever la résolution réelle de l'écran (`window.innerWidth/Height`)
+      → **1360×768 @ 59 Hz**, tactile « HID-compliant touch screen » confirmé,
+      Celeron J1900 4 cœurs 2 GHz, 8 Go, Intel HD Graphics (Bay Trail 2013),
+      UEFI/GPT, BitLocker désactivé, Ethernet 1 Gbps.
 - [ ] 9.2 Photo de l'intérieur du boîtier : format du disque (2,5" SATA ?
       mSATA ? M.2 ? eMMC soudé ?) avant d'acheter le SSD
+      → déjà connu côté logique : **SSD SATA 60 Go en GPT** (Recovery + ESP
+      100 Mo + MSR + C: 59 Go dont 29,5 Go libres). Reste à voir le format
+      physique de visu.
 - [ ] 9.3 SSD neuf comme disque Linux ; **le disque Windows sort et va dans un
       tiroir** — le retour arrière est un tournevis
 - [ ] 9.4 Debian minimal, démarrage automatique, Chromium en mode kiosk
@@ -204,8 +210,8 @@ empêcher.
 3. **Taille du vrai catalogue** — le nombre de produits par catégorie décidera
    du nombre de colonnes de la grille. Réglage à revoir à l'arrivée du CSV
    plutôt que sur des données fictives.
-4. **Résolution de l'écran** — inconnue. L'interface s'adapte, mais la
-   vérifier reste utile.
+4. ~~**Résolution de l'écran** — inconnue.~~ Réglée le 01/08 : **1360×768**.
+   C'est la largeur qui sert désormais de référence pour la barre d'onglets.
 
 ---
 
@@ -237,6 +243,64 @@ propre graisse, l'ensemble fait clipart.
 
 ## Journal
 
+- **2026-08-01** — Matériel de la caisse relevé sur place : **1360×768 @ 59 Hz**,
+  J1900, 8 Go, UEFI/GPT, SSD SATA 60 Go, tactile confirmé. La grande inconnue du
+  projet est levée, et elle expliquait le clipping de la barre d'onglets.
+- **2026-08-01** — Vrai catalogue intégré depuis l'ancienne caisse CareSine.
+  146 produits bruts → **102 produits en 8 catégories** (Pains, Viennoiseries,
+  Boissons chaudes, Boissons froides, Pâtisseries, Sandwichs, Salés, Divers).
+  Règle de coupe : moins de 50 ventes sur tout l'historique. Les doublons de
+  l'ancienne base ont été fusionnés en cumulant leurs ventes, l'ordre d'affichage
+  suit `ventes_total` décroissant. Les suppléments restent à la fin de l'onglet
+  Sandwichs, préfixés `+` : on les ajoute pendant la préparation, un onglet à
+  part imposait un aller-retour par commande.
+- **2026-08-01** — La catégorie « Divers » n'était pas décorative : `renderCats`
+  y cherche la catégorie fourre-tout pour y poser la tuile **Montant libre**.
+  Sans elle, la tuile atterrissait en dernière ligne de la dernière catégorie,
+  invisible. Les anciens boutons « Divers » à 4,50 € et « Divers kg » à 3,00 €
+  n'ont pas été repris pour autant : c'est le montant libre qui fait ce travail,
+  avec le bon prix.
+- **2026-08-01** — Onglets remis dans l'ordre d'une boulangerie — pains,
+  viennoiseries, pâtisseries, salés, sandwichs, boissons chaudes, boissons
+  froides, divers — au lieu de l'ordre par volume de ventes. Six tiennent à
+  l'écran, dont les boissons chaudes : le café reste atteignable sans glisser.
+- **2026-08-01** — Les illustrations étaient amputées à droite. La tuile faisait
+  déborder l'image de 0,7 rem puis la coupait, pour un effet de photo posée : sur
+  les dessins de démonstration, allongés et diagonaux, ça ne se voyait pas ; sur
+  le vrai catalogue ça tranchait net tout ce qui est rond — simit, pistolet,
+  miche de campagne. L'image tient désormais entièrement dans sa carte.
+- **2026-08-01** — Fondu au bord de la barre d'onglets. Avec huit catégories, deux
+  sortent du cadre, dont « Divers » qui porte le montant libre — et l'ordre
+  logique faisait tomber la découpe pile entre deux onglets, si bien que rien ne
+  disait qu'il y avait une suite. Masque statique, jamais animé.
+- **2026-08-01** — Catalogue réel entièrement illustré : **102/102 produits** en
+  gouache, et un jeu de **huit icônes de catégories** tiré d'une planche 4×2.
+  Coût total de la génération : environ 0,95 $.
+- **2026-08-01** — Deux défauts trouvés en regardant les images de près, tous
+  deux invisibles sur macOS :
+  1. Le découpage de la planche emportait une lamelle de la case voisine — un
+     bout de baguette collé au croissant. `decouper-planche.py` retire désormais
+     les résidus : petit **et** plaqué contre un bord, c'est un voisin ; petit
+     et flottant au milieu, c'est la vapeur d'une tasse, on garde.
+  2. La réduction à 384 px passait par `sips`, **qui n'existe que sur macOS** :
+     sur Linux la ligne était sautée sans bruit et les images sortaient en
+     1024×1024, 250 Ko pièce au lieu de 30. Remplacé par `cwebp -resize 384 0`,
+     portable et en une seule compression. 4,3 Mo au total au lieu de ~25.
+- **2026-08-01** — `generer-images.sh` avait gardé `STYLE="plat"` en défaut,
+  celui de la phase de comparaison, alors que `CLAUDE.md` promet la gouache
+  « sans argument ». Corrigé avant le lot : sinon, 88 images dans le mauvais
+  style, à repayer.
+- **2026-08-01** — Deux garde-fous sur les noms d'images, après avoir vu le
+  supplément « + Fromage » illustré par un hamburger : le `+` se traduit par
+  `supplement-` dans le slug, et la caisse essaie `<catégorie>-<produit>` avant
+  le nom nu. Les illustrations de démonstration `fromage.webp` et `jambon.webp`
+  ont été retirées, fausses aux deux endroits où elles apparaissaient.
+- **2026-08-01** — Barre d'onglets resserrée (padding 1,6 → 1,05 rem, icône
+  2,5 → 2,2 rem). Huit onglets ne tiennent pas dans la colonne de gauche en
+  1360 px : la barre défile, sur décision du user, plutôt que de passer sur deux
+  rangées. C'est le seul écart assumé à « pas de geste caché » ; il est compensé
+  en plaçant les catégories les plus tapées à gauche, et l'onglet actif est
+  désormais ramené dans le champ au chargement.
 - **2026-07-29** — Icônes de catégories reprises : la taille CSS n'était que
   la moitié du problème, le dessin n'occupait que 53 à 76 % de son image selon
   l'icône. D'où `scripts/normaliser-icones.py`, qui recadre sur un seuil

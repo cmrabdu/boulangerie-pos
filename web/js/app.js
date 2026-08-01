@@ -216,37 +216,84 @@ setInterval(verifierCatalogue, 8000);
 /* Chaque catégorie reçoit une icône déduite de son nom. Le catalogue vient d'un
    CSV qui ne contient que « catégorie, produit, prix » : rien ne dit quelle
    icône utiliser, on la devine donc par mots-clés. Une catégorie inattendue
-   tombe sur l'icône générique, ce qui est toujours mieux que rien. */
+   tombe sur l'icône générique, ce qui est toujours mieux que rien.
+
+   Chaque entrée liste les icônes par ordre de préférence : la première qui
+   existe vraiment gagne. C'est ce qui permet de scinder une famille — « chaudes »
+   et « froides » — sans attendre d'avoir dessiné les deux pictogrammes : tant
+   qu'ils manquent, les deux onglets retombent sur le gobelet générique. */
 const ICONES = [
-	[/pain|boulang|miche|baguet/, 'pain'],
-	[/viennois|croissant|couque|donut/, 'croissant'],
-	[/p[âa]tiss|g[âa]teau|tarte|dessert|sucr/, 'patisserie'],
-	[/sandwich|snack|salade|tartine|panini|baguette garnie/, 'sandwich'],
-	[/boisson|caf[ée]|jus|drink|soda|th[ée]/, 'boisson'],
+	[/suppl[ée]ment|garniture/, ['supplement']],
+	[/pain|boulang|miche|baguet/, ['pain']],
+	[/viennois|croissant|couque|donut/, ['croissant']],
+	[/p[âa]tiss|g[âa]teau|tarte|dessert|sucr/, ['patisserie']],
+	// « Salés » couvre börek, pide, pizzas et paninis : le pictogramme est une
+	// part de pizza, seule forme de la famille qui reste lisible à 25 px.
+	[/sal[ée]|b[öo]rek|pide|pizza|panini|quiche/, ['sale']],
+	[/sandwich|snack|tartine|baguette garnie/, ['sandwich']],
+	[/chaud/, ['boisson-chaude', 'boisson']],
+	[/froid|soda|jus/, ['boisson-froide', 'boisson']],
+	[/boisson|caf[ée]|drink|th[ée]/, ['boisson']],
 ];
 
-function iconeCategorie(nom) {
+function iconesCategorie(nom) {
 	const n = nom.toLowerCase();
-	for (const [motif, icone] of ICONES) {
-		if (motif.test(n)) return icone;
+	for (const [motif, icones] of ICONES) {
+		if (motif.test(n)) return icones;
 	}
-	return 'divers';
+	return ['divers'];
 }
 
 function renderCats() {
 	dom.cats.innerHTML = '';
+	let actif = null;
 	for (const c of state.catalog) {
 		const b = document.createElement('button');
 		b.type = 'button';
 		b.className = 'cat';
 		b.dataset.catId = c.id;
 		b.setAttribute('role', 'tab');
-		b.setAttribute('aria-selected', String(c.id === state.activeCatId));
+		const selectionne = c.id === state.activeCatId;
+		b.setAttribute('aria-selected', String(selectionne));
+		if (selectionne) actif = b;
+
+		const candidats = iconesCategorie(c.name);
 		b.innerHTML =
-			`<img class="cat-ico" src="/img/icons/${iconeCategorie(c.name)}.webp" alt="">` +
+			`<img class="cat-ico" src="/img/icons/${candidats[0]}.webp" alt="">` +
 			escapeHtml(c.name);
+		// On descend la liste des icônes possibles à mesure que le navigateur
+		// signale les fichiers absents. Épuisée, l'image s'efface : même règle que
+		// pour les produits, une illustration manquante n'est jamais un trou — le
+		// glyphe d'image cassée en serait un.
+		const img = b.querySelector('.cat-ico');
+		let rang = 0;
+		img.addEventListener('error', () => {
+			rang += 1;
+			if (rang < candidats.length) img.src = `/img/icons/${candidats[rang]}.webp`;
+			else img.remove();
+		});
 		dom.cats.appendChild(b);
 	}
+
+	// La barre défile quand il y a plus d'onglets que de largeur. L'onglet actif
+	// doit rester visible sans qu'on ait à la faire glisser pour le retrouver —
+	// au rechargement, la catégorie mémorisée peut être hors champ.
+	if (actif) actif.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+	majDebordementOnglets();
+}
+
+/* Huit onglets ne tiennent pas dans les 1360 px de la caisse : deux sortent du
+   cadre, dont « Divers » qui porte le montant libre. Rien ne le disait — la
+   découpe tombait pile entre deux onglets, et une barre qui s'arrête net se lit
+   comme une barre complète. Le bord concerné se fond donc dans le fond tant
+   qu'il reste des onglets de ce côté.
+
+   Un masque statique, jamais animé : le GPU de la caisse date de 2013. */
+function majDebordementOnglets() {
+	const el = dom.cats;
+	const reste = el.scrollWidth - el.clientWidth - Math.round(el.scrollLeft);
+	el.classList.toggle('deborde-droite', reste > 1);
+	el.classList.toggle('deborde-gauche', el.scrollLeft > 1);
 }
 
 function renderGrid(withAnimation = true) {
@@ -761,6 +808,9 @@ document.addEventListener('keydown', (e) => {
 /* Le zoom à deux doigts est déjà bloqué par la balise viewport, mais Safari sur
    iPad honore encore le double-tap : on le neutralise ici. */
 document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+dom.cats.addEventListener('scroll', majDebordementOnglets, { passive: true });
+window.addEventListener('resize', majDebordementOnglets, { passive: true });
 
 function escapeHtml(s) {
 	return String(s).replace(/[&<>"']/g, (c) => (
