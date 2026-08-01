@@ -24,4 +24,8 @@
 
 # Le catalogue réel de la boulangerie n'a rien à faire dans un dépôt public.
 /catalogue.csv
+
+# Même raison, en plus sensible : l'extraction de l'ancienne caisse contient le
+# dump de la base CareSine, les prix réels et les notes de migration.
+/migration-caresine/
 .DS_Store
