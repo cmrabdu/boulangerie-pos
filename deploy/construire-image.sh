@@ -101,6 +101,22 @@ mount --bind /dev/pts "$MNT/dev/pts"
 mount -t proc  proc  "$MNT/proc"
 mount -t sysfs sysfs "$MNT/sys"
 
+# Résolution de noms pendant la construction.
+#
+# Piège coûteux : le paquet systemd-resolved, installé plus bas, remplace
+# /etc/resolv.conf par un lien vers /run/systemd/resolve/stub-resolv.conf — un
+# fichier que seul le démon crée, et qui n'existe donc jamais dans un chroot.
+# Tout ce qui suit son installation perd la résolution DNS, et la construction
+# échoue sur un paquet tardif sans que la cause soit visible.
+#
+# On pose donc un vrai fichier, en supprimant d'abord un éventuel lien mort ;
+# le lien correct sera rétabli à la toute fin, pour le système installé.
+rm -f "$MNT/etc/resolv.conf"
+cat > "$MNT/etc/resolv.conf" <<'RESOLV'
+nameserver 1.1.1.1
+nameserver 9.9.9.9
+RESOLV
+
 # --------------------------------------------------------------------------
 msg "Configuration du système"
 # --------------------------------------------------------------------------
@@ -265,6 +281,11 @@ msg "Finition"
 # --------------------------------------------------------------------------
 chroot "$MNT" apt-get clean >/dev/null
 rm -rf "$MNT/root/kit" "$MNT/var/lib/apt/lists/"* "$MNT/tmp/"*
+
+# Rendre la résolution de noms au système installé : sur la machine réelle,
+# systemd-resolved tournera et créera bien le fichier visé par ce lien.
+rm -f "$MNT/etc/resolv.conf"
+ln -sf ../run/systemd/resolve/stub-resolv.conf "$MNT/etc/resolv.conf"
 
 # La base créée pendant la construction porterait la date et l'heure de la
 # construction. On la retire : la caisse la recréera au premier démarrage à
