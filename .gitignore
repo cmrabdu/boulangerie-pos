@@ -7,10 +7,16 @@
 # …sauf le modèle, qui ne contient que des noms de variables et des exemples.
 !.env.example
 
-# Images générées : lourdes, propres à chaque boulangerie, et reproductibles
-# par scripts/generer-images.sh. Le dépôt reste léger.
-/img/products/*
-!/img/products/.gitkeep
+# Les illustrations converties sont versionnées : 1,7 Mo pour cinquante-sept
+# images, c'est le prix d'un dépôt qui se clone et se déploie sans rien
+# régénérer — et sans repayer une génération.
+# Les fichiers bruts de génération, eux, restent dehors : lourds et redondants
+# avec les webp qui en sont tirés.
+/img/products/*.png
+/img/products/*.jpg
+/img/products/*.jpeg
+
+# Planches et comparatifs de style : matériel de travail, pas de production.
 /img/essais/
 *.db
 *.db-shm
